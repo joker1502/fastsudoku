@@ -1,0 +1,61 @@
+---
+title: "Sudoku Techniques: From Naked Singles to Advanced Patterns"
+description: "A progressive sudoku techniques guide. Start with naked and hidden singles, add pairs and pointing pairs, then see how harder techniques like X-Wing build on the same logic."
+date: "2026-08-08"
+---
+
+Every sudoku technique is just a smarter way to answer one question: *which digit goes in this cell?* Beginners answer it by scanning. Advanced players answer it with patterns that eliminate dozens of candidates at once. This guide walks the full ladder — from the techniques you already use to the ones that unlock expert puzzles — so you always know what to reach for next.
+
+## Before anything: candidates are the currency
+
+Every technique below operates on **candidates** — the set of digits that could still legally occupy a cell. The moment you stop looking at empty cells and start looking at candidate lists, the whole game changes. The three-constraint rule is worth restating: a cell's candidates are exhausted by what already sits in its row, its column, and its 3x3 box.
+
+## Tier 1: the singles
+
+These two solve most easy puzzles and a large share of medium ones. If you do not have them fluent, nothing below will help.
+
+### Naked single
+
+A cell with exactly **one** candidate. Because every other digit is ruled out, that digit goes in — no further reasoning needed. Naked singles are the bread and butter of fast solving.
+
+### Hidden single
+
+In a row, column, or box, a digit that has exactly **one** legal home, even though that cell carries other candidates. The digit is "hidden" among the cell's candidates but is the only place it can go. Scan unit by unit asking "where can a 6 still live here?" and hidden singles surface quickly. This is arguably the highest-value technique for the effort.
+
+## Tier 2: pairs and pointing candidates
+
+When singles stall, pairs are the natural next rung.
+
+### Naked pair
+
+Two cells in the same unit whose candidates are *both* the same two digits (and nothing else). Since those two digits must occupy those two cells, neither digit can go anywhere else in that unit. Strike both digits from every other cell in the row, column, or box. One simple fact, and it collapses a surprising number of candidates.
+
+### Pointing pair / triple
+
+A candidate appears in a 3x3 box **only** within a single row or column inside that box. Because the digit must be somewhere in that box, and it all sits on one line, it cannot appear elsewhere on that full row or column. eliminate the digit from that entire line. Pattern-focused and very common on medium-hard puzzles.
+
+## Tier 3: when pairs stop, think about technique
+
+At this point many solvers hit their ceiling and start guessing. A smarter move is to reach for a structured tool. If you have a grid mostly filled from singles and pairs but a few cells refuse to resolve, load the [solver](/solver/) and watch which technique it uses next. Reading a demonstrated technique beats memorizing a diagram. You will find most "too hard" puzzles are actually solvable by one single-elimination move you could not see.
+
+## Tier 4: the X-Wing and beyond
+
+The [X-Wing](/blog/x-wing-sudoku) is the first advanced technique most players learn, and it is a great mental model for everything above it. In its simplest form: if a candidate can only appear in two rows *and* those rows line up so the candidate's columns also match, the four positions form a rectangle — and the candidate can be eliminated from the two connecting columns. It reads like magic until you see it once; the dedicated guide walks a worked example.
+
+Beyond X-Wing lie swordfish, jellyfish, and coloring — each again just "eliminate candidates based on where a digit can and cannot be." They are all the same idea applied in more dimensions, and most hobbyists will never need them.
+
+## A practical order of operations
+
+When a puzzle stalls, run this ladder in order:
+
+1. Fill every naked single.
+2. Hunt hidden singles, unit by unit.
+3. Look for naked pairs.
+4. Look for pointing pairs/triples.
+5. Only then wonder about X-Wing and harder patterns.
+
+Do not skip to step 5 on easy puzzles — you will miss the simpler move that was already there. And when you genuinely stall, the [solver](/solver/) is your coach, and the [printable page](/printable/) gives you clean grids to practice patterns on paper.
+
+## The theme: elimination
+
+Notice what unifies every technique: **elimination**. Singles eliminate a candidate to one. Pairs eliminate two. X-Wing eliminates across aligned rows and columns. The better your elimination, the harder the puzzles you can crack. Start with the foundation in [sudoku for beginners](/blog/sudoku-for-beginners), add speed with [sudoku tips](/blog/sudoku-tips), then build a framework with [sudoku strategy](/blog/sudoku-strategy). Practice the ladder on the [play page](/play/).
