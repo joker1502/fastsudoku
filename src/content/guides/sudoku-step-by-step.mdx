@@ -1,0 +1,61 @@
+---
+title: "Sudoku Step by Step: Solve Your First Full Puzzle"
+description: "Follow along as we solve a complete beginner sudoku puzzle move by move — from the first scan to the final cell — and learn the exact thought process."
+date: "2026-08-10"
+tags: [sudoku step by step, sudoku walkthrough, sudoku for beginners]
+---
+
+Reading about techniques helps, but watching them applied to a real puzzle is how sudoku finally clicks. Below is a complete beginner puzzle solved step by step, with the reasoning explained at every move.
+
+## Setup: Our Puzzle
+
+We'll use a gentle puzzle with plenty of clues. Grab a pencil (or open our [sudoku maker](/maker) and generate an easy puzzle to follow along) and let's begin.
+
+## Move 1: Scan the Top Row
+
+Start with the row that has the most clues. In our puzzle, the top row is missing 2, 4, and 9.
+
+- The 2 can't go in column 3 (a 2 is already there) or column 7 (a 2 is there too), so the 2 goes in the remaining open spot.
+- The 4 and 9 resolve the same way — check which columns are blocked by the intersecting boxes.
+
+After scanning all three rows in the top band, several cells fill in.
+
+## Move 2: Box-First Scanning
+
+Now look at each 3x3 box, one at a time.
+
+The top-left box is missing 1, 5, and 8. Check the columns running through the box:
+
+- The 5 already appears in the second column of the middle band, so the 5 in this box must go in the rightmost column.
+- The 1 and 8 are blocked in only one direction each — they fill in cleanly.
+
+Box by box, the top band completes.
+
+## Move 3: Hidden Singles in the Middle
+
+With the top band done, look down the columns. In column 4, the digit 3 is missing and only one cell can accept it — a classic **hidden single**. Every other empty cell in that column is blocked by a 3 in its row or box.
+
+Hidden singles are the most common "aha" moment for beginners. The digit isn't obvious because the cell has many candidates — but once you check, only one spot works.
+
+## Move 4: Naked Singles Take Over
+
+As more cells fill, naked singles appear everywhere. A cell in the middle box now has only one possible digit left — write it down. Then that digit unlocks another cell, and another.
+
+This is the satisfying cascade every solver knows: the puzzle suddenly solves itself in a chain reaction.
+
+## Move 5: Finish With Scanning
+
+The last few cells are pure scanning. Check every remaining empty cell against its row, column, and box. With the grid nearly full, most cells accept only one value.
+
+## The Full Thought Process, Summarized
+
+1. **Scan rows and columns** with the most clues first
+2. **Check each box** for digits that fit in only one spot
+3. **Repeatedly fill naked and hidden singles** as they appear
+4. **Re-scan after every pass** — each filled cell creates new opportunities
+
+## Practice the Same Method
+
+The walkthrough above is exactly the process our [hints tool](/hints) follows when you ask for a nudge — it finds the next logical move and explains it.
+
+To practice: generate an [easy puzzle](/maker), try to solve it using only scanning and singles, and reach for a hint only when you're truly stuck. After three or four puzzles, the pattern becomes automatic. Then move on to [sudoku logic](/guides/sudoku-logic) for the techniques that crack hard puzzles.

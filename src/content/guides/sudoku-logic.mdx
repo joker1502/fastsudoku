@@ -1,0 +1,53 @@
+---
+title: "Sudoku Logic: The Reasoning Patterns That Solve Every Puzzle"
+description: "Sudoku is 100% logic. Learn the core reasoning patterns — singles, pairs, and pointing pairs — that professional solvers use to crack any puzzle without guessing."
+date: "2026-08-10"
+tags: [sudoku logic, sudoku techniques, sudoku reasoning]
+---
+
+Every sudoku puzzle ever published has one thing in common: it can be solved with pure logic. No guessing, no luck — just careful reasoning. This article explains the core logic patterns, from the basics to the techniques that unlock hard puzzles.
+
+## Why Sudoku Is Pure Logic
+
+Each cell in the grid has exactly one correct value, and the rules (1–9 once per row, column, and box) let you eliminate possibilities one by one. Every technique below is just a systematic way of eliminating options until only one remains.
+
+## Level 1: Naked Singles
+
+A **naked single** is a cell with only one possible value. Look at the cell's row, column, and box; if eight of the nine digits are already used elsewhere, the remaining digit must go in.
+
+This is the workhorse of easy puzzles. Scan repeatedly, filling naked singles as you spot them.
+
+## Level 2: Hidden Singles
+
+Sometimes a digit can only go in **one cell of a group**, even though that cell has several candidates. This is a **hidden single**.
+
+Example: in a row, the digit 7 might be missing, and only one empty cell in that row can accept a 7 (because 7 is already present in that cell's column and box everywhere else). That cell gets the 7.
+
+## Level 3: Pairs and Locked Candidates
+
+As puzzles get harder, single-cell logic stops being enough.
+
+**Naked pair:** two cells in the same group with the same two candidates. Those two digits must occupy those two cells, so you can remove them from every other cell in the group.
+
+**Pointing pair:** a digit appears in only two cells of a box, and both cells share a row or column. The digit must be in one of those two spots, so you can remove it from the rest of that row or column outside the box.
+
+## Level 4: The Advanced Toolkit
+
+For hard and expert puzzles, you'll reach for techniques like:
+
+- **X-Wing** — a rectangular pattern that eliminates a digit from two rows and two columns
+- **XY-Wing** — a three-cell chain that removes a shared candidate
+- **Swordfish** — an extension of X-Wing across three rows or columns
+- **Chains and coloring** — tracing what-if logic across the grid
+
+These are the techniques behind our hardest generated puzzles. Don't worry about mastering them today — first build fluency with singles and pairs.
+
+## Train Your Logic
+
+The fastest way to internalize these patterns is practice:
+
+- Generate puzzles at your level with the [sudoku maker](/maker).
+- When you're stuck, get a [hint](/hints) and study which logic pattern unlocked the cell.
+- Read our [step-by-step walkthrough](/guides/sudoku-step-by-step) to see the reasoning applied move by move.
+
+Sudoku logic builds on itself. Learn the singles, practice until they're automatic, and the harder patterns will start making sense. Every puzzle you solve makes the next one easier.
