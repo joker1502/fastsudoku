@@ -39,11 +39,14 @@ function parseMeta(frontmatter: unknown): {
     date?: unknown;
     tags?: unknown;
   };
-  const tags = Array.isArray(meta.tags)
+  const rawTags = Array.isArray(meta.tags)
     ? meta.tags.filter((t): t is string => typeof t === 'string')
     : typeof meta.tags === 'string'
       ? [meta.tags]
       : [];
+  const tags = rawTags.map((t) =>
+    t.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+  );
   return {
     title: typeof meta.title === 'string' ? meta.title : '',
     description: typeof meta.description === 'string' ? meta.description : '',
