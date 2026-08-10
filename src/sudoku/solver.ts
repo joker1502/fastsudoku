@@ -1,40 +1,44 @@
 /**
  * Sudoku solver with step-by-step reasoning.
  *
- * The solver first applies the three MVP techniques — naked single,
- * hidden single, and candidate elimination (pointing pairs) — and records
- * every placement as a human-readable step. If the logical techniques stall
- * before the grid is complete, the remainder is finished with backtracking
- * search. Advanced techniques such as X-Wing can be added as further passes
- * in the main solving loop (see the extension point marked below).
+ * The solver first applies the core techniques — naked single, hidden single,
+ * and candidate elimination (pointing pairs) — and records every placement as
+ * a human-readable step. If the logical techniques stall before the grid is
+ * complete, the remainder is finished with backtracking search. Every
+ * function accepts a SudokuSpec (defaulting to 9x9) so kids 4x4/6x6 and
+ * 16x16 mega grids are supported by the same solver.
  */
 
 import {
   type Grid,
-  SIZE,
-  CELLS,
   rowOf,
   colOf,
   boxOf,
   indexOf,
   isValidGrid,
 } from './validator';
+import {
+  type SudokuSpec,
+  DEFAULT_SPEC,
+  cellsOf,
+  boxCount,
+  boxesPerRow,
+} from './spec';
 
 /**
  * A single solving step: the value placed in a cell, the technique that
  * justified it, and a human-readable explanation.
  */
 export interface Step {
-  /** Row of the placed cell (0-8). */
+  /** Row of the placed cell (0..size-1). */
   row: number;
-  /** Column of the placed cell (0-8). */
+  /** Column of the placed cell (0..size-1). */
   col: number;
-  /** Digit placed (1-9). */
+  /** Digit placed (1..size). */
   value: number;
   /**
    * Reasoning technique used. 'backtracking' is the search fallback used
-   * only when the three MVP techniques cannot make progress; it is the
-   * extension point where X-Wing and friends would be added instead.
+   * only when the three techniques cannot make progress.
    */
   technique:
     | 'naked single'
@@ -46,31 +50,36 @@ export interface Step {
 }
 
 /**
- * Returns the candidate digits (1-9) that may still be placed in the given
- * cell, i.e. the digits not yet used by its row, column, or box. Returns an
- * empty array when the cell is already filled.
+ * Returns the candidate digits (1..size) that may still be placed in the
+ * given cell, i.e. the digits not yet used by its row, column, or box.
+ * Returns an empty array when the cell is already filled.
  */
-export function getCandidates(grid: Grid, row: number, col: number): number[] {
-  const index = indexOf(row, col);
+export function getCandidates(
+  grid: Grid,
+  row: number,
+  col: number,
+  spec: SudokuSpec = DEFAULT_SPEC,
+): number[] {
+  const index = indexOf(row, col, spec);
   if (grid[index] !== 0) {
     return [];
   }
   const used = new Set<number>();
-  for (let c = 0; c < SIZE; c++) {
-    used.add(grid[indexOf(row, c)]);
+  for (let c = 0; c < spec.size; c++) {
+    used.add(grid[indexOf(row, c, spec)]);
   }
-  for (let r = 0; r < SIZE; r++) {
-    used.add(grid[indexOf(r, col)]);
+  for (let r = 0; r < spec.size; r++) {
+    used.add(grid[indexOf(r, col, spec)]);
   }
-  const startRow = Math.floor(row / 3) * 3;
-  const startCol = Math.floor(col / 3) * 3;
-  for (let r = startRow; r < startRow + 3; r++) {
-    for (let c = startCol; c < startCol + 3; c++) {
-      used.add(grid[indexOf(r, c)]);
+  const startRow = Math.floor(row / spec.boxRows) * spec.boxRows;
+  const startCol = Math.floor(col / spec.boxCols) * spec.boxCols;
+  for (let r = startRow; r < startRow + spec.boxRows; r++) {
+    for (let c = startCol; c < startCol + spec.boxCols; c++) {
+      used.add(grid[indexOf(r, c, spec)]);
     }
   }
   const result: number[] = [];
-  for (let digit = 1; digit <= 9; digit++) {
+  for (let digit = 1; digit <= spec.size; digit++) {
     if (!used.has(digit)) {
       result.push(digit);
     }
@@ -83,14 +92,17 @@ export function getCandidates(grid: Grid, row: number, col: number): number[] {
  * Returns -1 when no empty cell remains (the grid is solved) or -2 when some
  * empty cell has zero candidates (a contradiction in the partial grid).
  */
-export function findEmptyWithFewestCandidates(grid: Grid): number {
+export function findEmptyWithFewestCandidates(
+  grid: Grid,
+  spec: SudokuSpec = DEFAULT_SPEC,
+): number {
   let best = -1;
-  let bestCount = SIZE + 1;
-  for (let i = 0; i < CELLS; i++) {
+  let bestCount = spec.size + 1;
+  for (let i = 0; i < cellsOf(spec); i++) {
     if (grid[i] !== 0) {
       continue;
     }
-    const candidates = getCandidates(grid, rowOf(i), colOf(i));
+    const candidates = getCandidates(grid, rowOf(i, spec), colOf(i, spec), spec);
     if (candidates.length === 0) {
       return -2;
     }
@@ -111,17 +123,21 @@ export function findEmptyWithFewestCandidates(grid: Grid): number {
  * leaves steps that are consistent with the final solution (steps are
  * popped again when a branch is abandoned).
  */
-function searchAndRecord(work: Grid, steps: Step[]): boolean {
-  const index = findEmptyWithFewestCandidates(work);
+function searchAndRecord(
+  work: Grid,
+  steps: Step[],
+  spec: SudokuSpec,
+): boolean {
+  const index = findEmptyWithFewestCandidates(work, spec);
   if (index === -2) {
     return false;
   }
   if (index === -1) {
     return true;
   }
-  const row = rowOf(index);
-  const col = colOf(index);
-  for (const digit of getCandidates(work, row, col)) {
+  const row = rowOf(index, spec);
+  const col = colOf(index, spec);
+  for (const digit of getCandidates(work, row, col, spec)) {
     work[index] = digit;
     steps.push({
       row,
@@ -130,7 +146,7 @@ function searchAndRecord(work: Grid, steps: Step[]): boolean {
       technique: 'backtracking',
       description: `Logical techniques stalled; placed ${digit} in cell (${row + 1},${col + 1}) by trial.`,
     });
-    if (searchAndRecord(work, steps)) {
+    if (searchAndRecord(work, steps, spec)) {
       return true;
     }
     work[index] = 0;
@@ -140,24 +156,25 @@ function searchAndRecord(work: Grid, steps: Step[]): boolean {
 }
 
 /**
- * Solves a Sudoku grid and returns the full solution together with the
+ * Solves a sudoku grid and returns the full solution together with the
  * ordered list of reasoning steps that produced it. Throws an error when
- * the input grid violates Sudoku rules or has no solution.
+ * the input grid violates sudoku rules or has no solution.
  */
-export function solveWithSteps(grid: Grid): {
-  solution: Grid;
-  steps: Step[];
-} {
-  if (!isValidGrid(grid)) {
-    throw new Error('solveWithSteps: grid is not a valid partial Sudoku');
+export function solveWithSteps(
+  grid: Grid,
+  spec: SudokuSpec = DEFAULT_SPEC,
+): { solution: Grid; steps: Step[] } {
+  if (!isValidGrid(grid, spec)) {
+    throw new Error('solveWithSteps: grid is not a valid partial sudoku');
   }
   const work = grid.slice();
   const steps: Step[] = [];
   const candidates = new Map<number, number[]>();
+  const size = spec.size;
 
   const emptyCells = (): number[] => {
     const list: number[] = [];
-    for (let i = 0; i < CELLS; i++) {
+    for (let i = 0; i < cellsOf(spec); i++) {
       if (work[i] === 0) {
         list.push(i);
       }
@@ -168,7 +185,10 @@ export function solveWithSteps(grid: Grid): {
   const computeAllCandidates = (): void => {
     candidates.clear();
     for (const index of emptyCells()) {
-      candidates.set(index, getCandidates(work, rowOf(index), colOf(index)));
+      candidates.set(
+        index,
+        getCandidates(work, rowOf(index, spec), colOf(index, spec), spec),
+      );
     }
   };
 
@@ -183,24 +203,24 @@ export function solveWithSteps(grid: Grid): {
   };
 
   const removeFromPeers = (index: number, digit: number): void => {
-    const row = rowOf(index);
-    const col = colOf(index);
-    for (let c = 0; c < SIZE; c++) {
+    const row = rowOf(index, spec);
+    const col = colOf(index, spec);
+    for (let c = 0; c < size; c++) {
       if (c !== col) {
-        eliminate(indexOf(row, c), digit);
+        eliminate(indexOf(row, c, spec), digit);
       }
     }
-    for (let r = 0; r < SIZE; r++) {
+    for (let r = 0; r < size; r++) {
       if (r !== row) {
-        eliminate(indexOf(r, col), digit);
+        eliminate(indexOf(r, col, spec), digit);
       }
     }
-    const startRow = Math.floor(row / 3) * 3;
-    const startCol = Math.floor(col / 3) * 3;
-    for (let r = startRow; r < startRow + 3; r++) {
-      for (let c = startCol; c < startCol + 3; c++) {
+    const startRow = Math.floor(row / spec.boxRows) * spec.boxRows;
+    const startCol = Math.floor(col / spec.boxCols) * spec.boxCols;
+    for (let r = startRow; r < startRow + spec.boxRows; r++) {
+      for (let c = startCol; c < startCol + spec.boxCols; c++) {
         if (r !== row || c !== col) {
-          eliminate(indexOf(r, c), digit);
+          eliminate(indexOf(r, c, spec), digit);
         }
       }
     }
@@ -213,11 +233,12 @@ export function solveWithSteps(grid: Grid): {
     description: string,
   ): void => {
     work[index] = digit;
+    emptyCount--;
     candidates.delete(index);
     removeFromPeers(index, digit);
     steps.push({
-      row: rowOf(index),
-      col: colOf(index),
+      row: rowOf(index, spec),
+      col: colOf(index, spec),
       value: digit,
       technique,
       description,
@@ -225,9 +246,10 @@ export function solveWithSteps(grid: Grid): {
   };
 
   computeAllCandidates();
-  let solved = work.indexOf(0) === -1;
+  let emptyCount = work.filter((v) => v === 0).length;
+  const solved = () => emptyCount === 0;
 
-  while (!solved) {
+  while (!solved()) {
     // --- technique 1: naked single ---
     let nakedIndex = -1;
     for (const index of emptyCells()) {
@@ -238,8 +260,8 @@ export function solveWithSteps(grid: Grid): {
       }
     }
     if (nakedIndex !== -1) {
-      const row = rowOf(nakedIndex);
-      const col = colOf(nakedIndex);
+      const row = rowOf(nakedIndex, spec);
+      const col = colOf(nakedIndex, spec);
       const digit = candidates.get(nakedIndex)![0];
       fill(
         nakedIndex,
@@ -247,18 +269,17 @@ export function solveWithSteps(grid: Grid): {
         'naked single',
         `Cell (${row + 1},${col + 1}) has only one candidate left: ${digit}.`,
       );
-      solved = work.indexOf(0) === -1;
       continue;
     }
 
     // --- technique 2: hidden single ---
     let hiddenIndex = -1;
     let hiddenDigit = 0;
-    for (let digit = 1; digit <= SIZE && hiddenIndex === -1; digit++) {
-      for (let r = 0; r < SIZE && hiddenIndex === -1; r++) {
+    for (let digit = 1; digit <= size && hiddenIndex === -1; digit++) {
+      for (let r = 0; r < size && hiddenIndex === -1; r++) {
         const spots: number[] = [];
-        for (let c = 0; c < SIZE; c++) {
-          const index = indexOf(r, c);
+        for (let c = 0; c < size; c++) {
+          const index = indexOf(r, c, spec);
           if (work[index] === 0 && candidates.get(index)!.includes(digit)) {
             spots.push(index);
           }
@@ -268,10 +289,10 @@ export function solveWithSteps(grid: Grid): {
           hiddenDigit = digit;
         }
       }
-      for (let c = 0; c < SIZE && hiddenIndex === -1; c++) {
+      for (let c = 0; c < size && hiddenIndex === -1; c++) {
         const spots: number[] = [];
-        for (let r = 0; r < SIZE; r++) {
-          const index = indexOf(r, c);
+        for (let r = 0; r < size; r++) {
+          const index = indexOf(r, c, spec);
           if (work[index] === 0 && candidates.get(index)!.includes(digit)) {
             spots.push(index);
           }
@@ -281,13 +302,14 @@ export function solveWithSteps(grid: Grid): {
           hiddenDigit = digit;
         }
       }
-      for (let b = 0; b < SIZE && hiddenIndex === -1; b++) {
-        const startRow = Math.floor(b / 3) * 3;
-        const startCol = (b % 3) * 3;
+      const boxesAcross = boxesPerRow(spec);
+      for (let b = 0; b < boxCount(spec) && hiddenIndex === -1; b++) {
+        const startRow = Math.floor(b / boxesAcross) * spec.boxRows;
+        const startCol = (b % boxesAcross) * spec.boxCols;
         const spots: number[] = [];
-        for (let r = startRow; r < startRow + 3; r++) {
-          for (let c = startCol; c < startCol + 3; c++) {
-            const index = indexOf(r, c);
+        for (let r = startRow; r < startRow + spec.boxRows; r++) {
+          for (let c = startCol; c < startCol + spec.boxCols; c++) {
+            const index = indexOf(r, c, spec);
             if (work[index] === 0 && candidates.get(index)!.includes(digit)) {
               spots.push(index);
             }
@@ -300,28 +322,28 @@ export function solveWithSteps(grid: Grid): {
       }
     }
     if (hiddenIndex !== -1) {
-      const row = rowOf(hiddenIndex);
-      const col = colOf(hiddenIndex);
+      const row = rowOf(hiddenIndex, spec);
+      const col = colOf(hiddenIndex, spec);
       fill(
         hiddenIndex,
         hiddenDigit,
         'hidden single',
         `Digit ${hiddenDigit} can only be placed in cell (${row + 1},${col + 1}) within one of its units.`,
       );
-      solved = work.indexOf(0) === -1;
       continue;
     }
 
     // --- technique 3: candidate elimination (pointing pairs/triples) ---
     const eliminations: string[] = [];
-    for (let b = 0; b < SIZE; b++) {
-      const startRow = Math.floor(b / 3) * 3;
-      const startCol = (b % 3) * 3;
-      for (let digit = 1; digit <= SIZE; digit++) {
+    const boxesAcross = boxesPerRow(spec);
+    for (let b = 0; b < boxCount(spec); b++) {
+      const startRow = Math.floor(b / boxesAcross) * spec.boxRows;
+      const startCol = (b % boxesAcross) * spec.boxCols;
+      for (let digit = 1; digit <= size; digit++) {
         const inBox: number[] = [];
-        for (let r = startRow; r < startRow + 3; r++) {
-          for (let c = startCol; c < startCol + 3; c++) {
-            const index = indexOf(r, c);
+        for (let r = startRow; r < startRow + spec.boxRows; r++) {
+          for (let c = startCol; c < startCol + spec.boxCols; c++) {
+            const index = indexOf(r, c, spec);
             if (work[index] === 0 && candidates.get(index)!.includes(digit)) {
               inBox.push(index);
             }
@@ -330,13 +352,13 @@ export function solveWithSteps(grid: Grid): {
         if (inBox.length === 0) {
           continue;
         }
-        const rows = new Set(inBox.map((index) => rowOf(index)));
-        const cols = new Set(inBox.map((index) => colOf(index)));
+        const rows = new Set(inBox.map((index) => rowOf(index, spec)));
+        const cols = new Set(inBox.map((index) => colOf(index, spec)));
         if (rows.size === 1) {
           const row = rows.values().next().value!;
-          for (let c = 0; c < SIZE; c++) {
-            const index = indexOf(row, c);
-            if (work[index] !== 0 || boxOf(index) === b) {
+          for (let c = 0; c < size; c++) {
+            const index = indexOf(row, c, spec);
+            if (work[index] !== 0 || boxOf(index, spec) === b) {
               continue;
             }
             if (candidates.get(index)!.includes(digit)) {
@@ -349,9 +371,9 @@ export function solveWithSteps(grid: Grid): {
         }
         if (cols.size === 1) {
           const col = cols.values().next().value!;
-          for (let r = 0; r < SIZE; r++) {
-            const index = indexOf(r, col);
-            if (work[index] !== 0 || boxOf(index) === b) {
+          for (let r = 0; r < size; r++) {
+            const index = indexOf(r, col, spec);
+            if (work[index] !== 0 || boxOf(index, spec) === b) {
               continue;
             }
             if (candidates.get(index)!.includes(digit)) {
@@ -367,8 +389,8 @@ export function solveWithSteps(grid: Grid): {
     if (eliminations.length > 0) {
       const exposed = emptyCells().find((index) => candidates.get(index)!.length === 1);
       if (exposed !== undefined) {
-        const row = rowOf(exposed);
-        const col = colOf(exposed);
+        const row = rowOf(exposed, spec);
+        const col = colOf(exposed, spec);
         const digit = candidates.get(exposed)![0];
         fill(
           exposed,
@@ -377,17 +399,15 @@ export function solveWithSteps(grid: Grid): {
           `Candidate elimination: ${eliminations.slice(0, 3).join('; ')}. ` +
             `Cell (${row + 1},${col + 1}) is now reduced to a single candidate ${digit}.`,
         );
-        solved = work.indexOf(0) === -1;
         continue;
       }
       continue;
     }
 
     // --- fallback: backtracking search ---
-    // This is the extension point for advanced techniques (X-Wing etc.).
-    // When the MVP techniques stall, the remaining cells are solved by
+    // When the logical techniques stall, the remaining cells are solved by
     // search so that a complete solution is still guaranteed.
-    if (!searchAndRecord(work, steps)) {
+    if (!searchAndRecord(work, steps, spec)) {
       throw new Error('solveWithSteps: puzzle has no valid solution');
     }
     break;
@@ -399,20 +419,36 @@ export function solveWithSteps(grid: Grid): {
 /**
  * Returns true when the grid has exactly one valid completion, and false
  * when it has zero or multiple solutions. Throws an error when the input
- * grid violates Sudoku rules.
+ * grid violates sudoku rules.
+ *
+ * An optional node budget bounds the search. When the budget is exceeded the
+ * function returns false ("could not prove uniqueness") so that callers such
+ * as the generator can bail out safely instead of hanging on very large
+ * grids (16x16). With the default budget of Infinity the result is exact.
  */
-export function hasUniqueSolution(grid: Grid): boolean {
-  if (!isValidGrid(grid)) {
-    throw new Error('hasUniqueSolution: grid is not a valid partial Sudoku');
+export function hasUniqueSolution(
+  grid: Grid,
+  spec: SudokuSpec = DEFAULT_SPEC,
+  nodeBudget = Infinity,
+): boolean {
+  if (!isValidGrid(grid, spec)) {
+    throw new Error('hasUniqueSolution: grid is not a valid partial sudoku');
   }
   const work = grid.slice();
   let count = 0;
+  let nodes = 0;
+  let budgetExceeded = false;
 
   const search = (): boolean => {
-    if (count > 1) {
+    if (count > 1 || budgetExceeded) {
       return true;
     }
-    const index = findEmptyWithFewestCandidates(work);
+    nodes++;
+    if (nodes > nodeBudget) {
+      budgetExceeded = true;
+      return true;
+    }
+    const index = findEmptyWithFewestCandidates(work, spec);
     if (index === -2) {
       return false;
     }
@@ -420,9 +456,9 @@ export function hasUniqueSolution(grid: Grid): boolean {
       count++;
       return count > 1;
     }
-    const row = rowOf(index);
-    const col = colOf(index);
-    for (const digit of getCandidates(work, row, col)) {
+    const row = rowOf(index, spec);
+    const col = colOf(index, spec);
+    for (const digit of getCandidates(work, row, col, spec)) {
       work[index] = digit;
       if (search()) {
         return true;
@@ -433,5 +469,8 @@ export function hasUniqueSolution(grid: Grid): boolean {
   };
 
   search();
+  if (budgetExceeded) {
+    return false;
+  }
   return count === 1;
 }

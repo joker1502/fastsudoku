@@ -6,3 +6,4 @@ dist/
 .env*
 !.env.example
 out/
+src/generated/

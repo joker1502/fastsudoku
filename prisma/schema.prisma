@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  lifetimePremium Boolean  @default(false) @map("lifetime_premium")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}

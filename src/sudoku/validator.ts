@@ -1,65 +1,77 @@
 /**
- * Validation and structural helpers for 9x9 Sudoku grids.
+ * Validation and structural helpers for sudoku grids of any size.
  *
- * A grid is represented as a flat array of 81 cells in row-major order,
- * where 0 means "empty" and 1-9 are filled digits.
+ * A grid is represented as a flat array of size*size cells in row-major
+ * order, where 0 means "empty" and 1..size are filled digits. Every function
+ * takes a SudokuSpec (defaulting to standard 9x9) so the same helpers serve
+ * kids 4x4/6x6 grids and 16x16 mega grids.
  */
 
+import {
+  type SudokuSpec,
+  DEFAULT_SPEC,
+  cellsOf,
+  boxCount,
+  boxesPerRow,
+} from './spec';
+
 /**
- * Sudoku grid type: a flat array of 81 cells, row-major order.
- * 0 represents an empty cell; digits 1-9 are the filled values.
+ * Sudoku grid type: a flat array of size*size cells, row-major order.
+ * 0 represents an empty cell; digits 1..size are the filled values.
  */
 export type Grid = number[];
 
-/** Number of rows, columns, and boxes in a standard 9x9 Sudoku. */
-export const SIZE = 9;
-
-/** Total number of cells in a 9x9 grid (81). */
-export const CELLS = 81;
-
-/** Returns the row (0-8) that a flat cell index belongs to. */
-export function rowOf(index: number): number {
-  return Math.floor(index / SIZE);
+/** Returns the flat cell index (0..size*size-1) for the given row and column. */
+export function rowOf(index: number, spec: SudokuSpec = DEFAULT_SPEC): number {
+  return Math.floor(index / spec.size);
 }
 
-/** Returns the column (0-8) that a flat cell index belongs to. */
-export function colOf(index: number): number {
-  return index % SIZE;
+/** Returns the column (0..size-1) that a flat cell index belongs to. */
+export function colOf(index: number, spec: SudokuSpec = DEFAULT_SPEC): number {
+  return index % spec.size;
 }
 
-/** Returns the box (0-8) that a flat cell index belongs to. */
-export function boxOf(index: number): number {
-  return Math.floor(rowOf(index) / 3) * 3 + Math.floor(colOf(index) / 3);
+/** Returns the box (0..boxCount-1) that a flat cell index belongs to. */
+export function boxOf(index: number, spec: SudokuSpec = DEFAULT_SPEC): number {
+  const boxesAcross = boxesPerRow(spec);
+  return (
+    Math.floor(rowOf(index, spec) / spec.boxRows) * boxesAcross +
+    Math.floor(colOf(index, spec) / spec.boxCols)
+  );
 }
 
-/** Returns the flat cell index (0-80) for the given row and column. */
-export function indexOf(row: number, col: number): number {
-  return row * SIZE + col;
+/** Returns the flat cell index (0..size*size-1) for the given row and column. */
+export function indexOf(
+  row: number,
+  col: number,
+  spec: SudokuSpec = DEFAULT_SPEC,
+): number {
+  return row * spec.size + col;
 }
 
 /**
  * Returns true when the grid has the correct shape, every cell is an
- * integer in [0, 9], and no Sudoku rule (duplicate digit in a row,
+ * integer in [0, size], and no sudoku rule (duplicate digit in a row,
  * column, or box) is violated. Empty cells (0) never count as conflicts.
  */
-export function isValidGrid(grid: Grid): boolean {
-  if (!Array.isArray(grid) || grid.length !== CELLS) {
+export function isValidGrid(grid: Grid, spec: SudokuSpec = DEFAULT_SPEC): boolean {
+  if (!Array.isArray(grid) || grid.length !== cellsOf(spec)) {
     return false;
   }
   for (const cell of grid) {
-    if (!Number.isInteger(cell) || cell < 0 || cell > 9) {
+    if (!Number.isInteger(cell) || cell < 0 || cell > spec.size) {
       return false;
     }
   }
-  return getConflicts(grid).length === 0;
+  return getConflicts(grid, spec).length === 0;
 }
 
 /**
- * Returns true when the grid is a fully solved Sudoku: every cell holds a
- * digit 1-9 and no rule is violated.
+ * Returns true when the grid is a fully solved sudoku: every cell holds a
+ * digit 1..size and no rule is violated.
  */
-export function isCompleteGrid(grid: Grid): boolean {
-  if (!Array.isArray(grid) || grid.length !== CELLS) {
+export function isCompleteGrid(grid: Grid, spec: SudokuSpec = DEFAULT_SPEC): boolean {
+  if (!Array.isArray(grid) || grid.length !== cellsOf(spec)) {
     return false;
   }
   for (const cell of grid) {
@@ -67,7 +79,7 @@ export function isCompleteGrid(grid: Grid): boolean {
       return false;
     }
   }
-  return isValidGrid(grid);
+  return isValidGrid(grid, spec);
 }
 
 /**
@@ -75,8 +87,11 @@ export function isCompleteGrid(grid: Grid): boolean {
  * conflict in its row, column, or box. Empty cells are never reported.
  * Returns an empty array for structurally invalid grids.
  */
-export function getConflicts(grid: Grid): { row: number; col: number }[] {
-  if (!Array.isArray(grid) || grid.length !== CELLS) {
+export function getConflicts(
+  grid: Grid,
+  spec: SudokuSpec = DEFAULT_SPEC,
+): { row: number; col: number }[] {
+  if (!Array.isArray(grid) || grid.length !== cellsOf(spec)) {
     return [];
   }
   const conflicts: { row: number; col: number }[] = [];
@@ -84,7 +99,7 @@ export function getConflicts(grid: Grid): { row: number; col: number }[] {
   const flag = (index: number): void => {
     if (!flagged.has(index)) {
       flagged.add(index);
-      conflicts.push({ row: rowOf(index), col: colOf(index) });
+      conflicts.push({ row: rowOf(index, spec), col: colOf(index, spec) });
     }
   };
   const checkUnit = (unit: number[]): void => {
@@ -103,19 +118,24 @@ export function getConflicts(grid: Grid): { row: number; col: number }[] {
       }
     }
   };
-  for (let r = 0; r < SIZE; r++) {
-    checkUnit(Array.from({ length: SIZE }, (_, c) => indexOf(r, c)));
+  for (let r = 0; r < spec.size; r++) {
+    checkUnit(
+      Array.from({ length: spec.size }, (_, c) => indexOf(r, c, spec)),
+    );
   }
-  for (let c = 0; c < SIZE; c++) {
-    checkUnit(Array.from({ length: SIZE }, (_, r) => indexOf(r, c)));
+  for (let c = 0; c < spec.size; c++) {
+    checkUnit(
+      Array.from({ length: spec.size }, (_, r) => indexOf(r, c, spec)),
+    );
   }
-  for (let b = 0; b < SIZE; b++) {
-    const startRow = Math.floor(b / 3) * 3;
-    const startCol = (b % 3) * 3;
+  const boxesAcross = boxesPerRow(spec);
+  for (let b = 0; b < boxCount(spec); b++) {
+    const startRow = Math.floor(b / boxesAcross) * spec.boxRows;
+    const startCol = (b % boxesAcross) * spec.boxCols;
     const box: number[] = [];
-    for (let r = startRow; r < startRow + 3; r++) {
-      for (let c = startCol; c < startCol + 3; c++) {
-        box.push(indexOf(r, c));
+    for (let r = startRow; r < startRow + spec.boxRows; r++) {
+      for (let c = startCol; c < startCol + spec.boxCols; c++) {
+        box.push(indexOf(r, c, spec));
       }
     }
     checkUnit(box);

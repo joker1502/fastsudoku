@@ -1,0 +1,390 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+body {
+  @apply bg-white font-sans text-gray-800 antialiased;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-800 disabled:cursor-default disabled:opacity-45;
+  }
+
+  .btn:hover:not(:disabled) {
+    @apply bg-gray-100;
+  }
+
+  .btn-primary {
+    @apply border-blue-600 bg-blue-600 font-semibold text-white hover:bg-blue-700;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    @apply border-blue-700 bg-blue-700;
+  }
+
+  .board {
+    @apply mx-auto grid aspect-square w-full max-w-[480px] border-2 border-gray-900 bg-white;
+  }
+
+  .cell {
+    @apply relative flex items-center justify-center border-0 border-r border-b border-gray-300 p-0 leading-none;
+    font-size: var(--cell-font, 30px);
+  }
+
+  .cell.br {
+    @apply border-r-2 border-r-gray-900;
+  }
+
+  .cell.bb {
+    @apply border-b-2 border-b-gray-900;
+  }
+
+  .cell:hover {
+    @apply bg-blue-50;
+  }
+
+  .cell:focus-visible {
+    @apply outline-2 outline-blue-600 -outline-offset-2;
+  }
+
+  .cell-selected {
+    @apply bg-blue-100;
+  }
+
+  .cell-same {
+    @apply bg-blue-50;
+  }
+
+  .cell-conflict {
+    @apply bg-red-100;
+  }
+
+  .cell-conflict .cell-digit {
+    @apply text-red-600;
+  }
+
+  .cell-step {
+    @apply bg-amber-200 outline-2 outline-amber-500 -outline-offset-2;
+  }
+
+  .cell-peer {
+    @apply bg-amber-50;
+  }
+
+  .notes-grid {
+    @apply absolute inset-0.5 grid;
+  }
+
+  .note {
+    @apply flex items-center justify-center leading-none text-gray-500;
+    font-size: var(--note-font, 12px);
+  }
+
+  .note-off {
+    @apply text-transparent;
+  }
+
+  .pad {
+    @apply mx-auto mt-3.5 grid max-w-[480px] gap-1.5;
+  }
+
+  .pad .digit {
+    @apply h-11 min-w-0 flex-1 p-0 text-lg;
+  }
+
+  .win-overlay {
+    @apply absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 rounded-lg bg-white/95;
+  }
+
+  .win-overlay h2 {
+    @apply text-green-600;
+  }
+
+  .pboard {
+    @apply grid aspect-square w-full grid-cols-9 border-2 border-gray-900 bg-white;
+  }
+
+  .pcell {
+    @apply relative flex items-center justify-center border-r border-b border-slate-300 font-bold leading-none text-gray-900;
+  }
+
+  .pcell.br {
+    @apply border-r-2 border-r-gray-900;
+  }
+
+  .pcell.bb {
+    @apply border-b-2 border-b-gray-900;
+  }
+
+  .pcell:nth-child(9n) {
+    border-right: 0;
+  }
+
+  .pcell:nth-child(n + 73) {
+    border-bottom: 0;
+  }
+
+  .pval {
+    display: flex;
+  }
+
+  .aval {
+    @apply absolute inset-0 hidden items-center justify-center;
+  }
+
+  .board-answer .pval {
+    display: none;
+  }
+
+  .board-answer .aval {
+    @apply flex;
+  }
+
+  .print-zone.reveal-answers .board-puzzle .pval {
+    display: none;
+  }
+
+  .print-zone.reveal-answers .board-puzzle .aval {
+    @apply flex;
+  }
+
+  .sheet {
+    @apply mx-auto mb-6 max-w-[780px] rounded-lg border border-gray-200 bg-white p-6 shadow-sm;
+  }
+
+  .print-grid {
+    @apply grid justify-items-center gap-x-5 gap-y-6;
+  }
+
+  .print-grid.size-1,
+  .pp-1 {
+    @apply grid-cols-1;
+  }
+
+  .print-grid.size-1 .pcell,
+  .pp-1 .pcell {
+    font-size: clamp(20px, 5vw, 38px);
+  }
+
+  .print-grid.size-2 .pcell,
+  .print-grid.size-4 .pcell,
+  .pp-2 .pcell,
+  .pp-4 .pcell {
+    font-size: clamp(10px, 2.3vw, 17px);
+  }
+
+  .prose {
+    @apply text-left text-base leading-[1.65];
+  }
+
+  .prose h2 {
+    @apply mb-2.5 mt-7 text-[1.3rem];
+  }
+
+  .prose h3 {
+    @apply mb-2 mt-5 text-[1.1rem];
+  }
+
+  .prose p {
+    @apply mb-3.5;
+  }
+
+  .prose ul,
+  .prose ol {
+    @apply mb-3.5 pl-5;
+  }
+
+  .prose li {
+    @apply mb-1.5;
+  }
+
+  .prose a {
+    @apply text-blue-600 hover:underline;
+  }
+
+  .prose code {
+    @apply rounded bg-gray-100 px-1.5 py-0.5 text-[0.9em];
+  }
+
+  .post-list a {
+    @apply text-[1.05rem] font-semibold text-gray-900 hover:text-blue-600;
+  }
+
+  .post-list time {
+    @apply mb-1.5 mt-0.5 block text-[0.8rem] text-gray-500;
+  }
+
+  .post-list p {
+    @apply m-0 text-[0.9rem] leading-relaxed text-gray-700;
+  }
+
+  /* Print sheets (maker batch printing) */
+  .print-zone {
+    text-align: left;
+  }
+
+  /* Free-tier watermark over each printed puzzle grid (premium removes it). */
+  .print-watermark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    font-size: clamp(14px, 4.5vw, 28px);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgb(107 114 128 / 0.28);
+    transform: rotate(-30deg);
+    white-space: nowrap;
+  }
+
+  .sheet-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .sheet-header .muted {
+    font-weight: 400;
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+
+  .board-label {
+    margin: 0 0 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  .print-zone {
+    text-align: left;
+  }
+
+  .sheet {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .sheet-header {
+    margin-bottom: 4mm;
+    font-size: 11pt;
+  }
+
+  .print-grid {
+    gap: 8mm;
+  }
+
+  .print-grid.size-1,
+  .pp-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .print-grid.size-2,
+  .print-grid.size-4,
+  .pp-2,
+  .pp-4 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .print-grid.size-1 .pcell,
+  .pp-1 .pcell {
+    font-size: 26pt;
+  }
+
+  .print-grid.size-2 .pcell,
+  .pp-2 .pcell {
+    font-size: 17pt;
+  }
+
+  .print-grid.size-4 .pcell,
+  .pp-4 .pcell {
+    font-size: 15pt;
+  }
+
+  .board-label {
+    font-size: 9pt;
+    margin-bottom: 2mm;
+  }
+
+  .pboard,
+  .pcell {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .pboard {
+    border: 2px solid #111827;
+  }
+
+  .pcell {
+    border-right: 1px solid #9ca3af;
+    border-bottom: 1px solid #9ca3af;
+  }
+
+  .pcell.br {
+    border-right: 2px solid #111827;
+  }
+
+  .pcell.bb {
+    border-bottom: 2px solid #111827;
+  }
+
+  .print-zone.reveal-answers .board-puzzle .pval {
+    display: flex;
+  }
+
+  .print-zone.reveal-answers .board-puzzle .aval {
+    display: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
+/* cache-bust */
