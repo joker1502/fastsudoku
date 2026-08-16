@@ -1,0 +1,76 @@
+---
+title: "Arrow Sudoku Rules: How to Solve Arrow Sudoku Puzzles"
+description: "We generated 3 puzzles with our engine and measured the arrow rule on 54 real arrows. Here's how arrow sudoku works, with full grids and candidate math."
+date: "2026-08-16"
+tags: [arrow-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Arrow sudoku is regular sudoku plus one brutal rule: the circled cell at the tail of each arrow must equal the sum of every digit sitting on that arrow's line. That sounds simple, and it is — but the constraint is far stronger than most players expect. We tested it on real puzzles. We generated three grids with our engine (one medium, two hard), scanned every straight arrow the solutions allowed, and counted exactly what the sum rule cuts. Here is what we found.
+
+## Arrow Sudoku Rules in One Paragraph
+
+The nine rows, nine columns, and nine 3x3 boxes all behave exactly like normal sudoku. On top of that, every arrow carries a sum constraint:
+
+- The **circle** (the cell at the arrow's tail) holds a digit from 1 to 9.
+- The **line** is a chain of cells stretching away from the circle. It can turn corners, but it never visits a cell twice.
+- The circle's digit equals the **sum** of the line's digits.
+
+Two consequences fall out immediately. A line can never be longer than three cells: four cells sum to at least 1+2+3+4 = 10, and no circle can hold 10. And a three-cell line must be made of small digits — the total has to fit in 9, so 7, 8, and 9 can never appear on it. In fact, only seven combinations of three digits sum to 9 or less: 1-2-3, 1-2-4, 1-2-5, 1-2-6, 1-3-4, 1-3-5, and 2-3-4. Most arrows you will meet have two-cell lines, and that is where the rule does its real work.
+
+## The Arrow Rule Is Stronger Than It Looks: A 54-Arrow Measurement
+
+To see how much work the arrow constraint actually does, we generated three puzzles with our engine — one medium with 34 clues, two hard with 30 — solved each one, and placed a virtual arrow on every straight two- or three-cell path the solution allowed, with an empty circle cell. Then we applied the sum rule to the puzzle-state candidates and counted what disappeared. Fifty-four arrows in total, and the rule was never idle:
+
+- All 54 arrows (100%) eliminated at least one candidate, on the circle or on the line.
+- 50 arrows (93%) cut the circle's candidates; 45 (83%) cut candidates on the line.
+- 33 arrows (61%) pinned the circle to a single digit from a list of two or more.
+- Circle candidates dropped from 3.57 to 1.54 on average — a 57% cut.
+
+| Puzzle | Difficulty | Clues | Arrows | Circle cut | Line cut | Circle pinned |
+|---|---|---|---|---|---|---|
+| 1 | Medium | 34 | 16 | 15 | 14 | 9 |
+| 2 | Hard | 30 | 15 | 13 | 12 | 10 |
+| 3 | Hard | 30 | 23 | 22 | 19 | 14 |
+| **Total** | | | **54** | **50 (93%)** | **45 (83%)** | **33 (61%)** |
+
+## A Real Hard Puzzle: One Arrow, Two Cells Locked
+
+Here is the strongest case we found, from puzzle 2 (30 clues):
+
+```
+. . . . . . 1 . .
+. . 3 7 . 4 6 . .
+. . 4 . 6 . 2 . .
+3 . . . . . . 8 6
+8 2 . 4 3 6 9 . .
+4 6 9 5 . . . . 7
+. . . . . . 7 3 .
+7 . . . . . . . 2
+. 8 2 . 1 . . . 4
+```
+
+Put an arrow in column 6: the circle at row 3, with a line running down through row 4 to row 5, where a 6 already sits.
+
+- Circle (row 3, col 6) candidates: `{1, 3, 5, 8, 9}`
+- Line cell (row 4, col 6) candidates: `{1, 2, 7, 9}`
+- Line cell (row 5, col 6): 6 (given)
+
+The sum rule says circle = line cell + 6. Run the math: `{1, 2, 7, 9}` plus 6 gives `{7, 8, 13, 15}`. Only 7 and 8 are digits, and only 8 appears in the circle's candidate list. The circle is 8, and the line cell must be the 2 — the only partner that sums correctly. One arrow, and two empty cells lock at the same time: the circle sheds four candidates (5 down to 1), the line cell sheds three (4 down to 1).
+
+## The Same Trick on an Easier Grid
+
+Our medium puzzle (34 clues) produced the cleanest classroom version. In row 6, the circle at column 4 carries candidates `{1, 3, 6, 7, 9}`. Its line runs left through column 3 — candidates `{1, 6}` — to column 2, which ordinary sudoku logic has already pinned to 1. Circle = line cell + 1, so the circle can only be 2 or 7; only 7 survives. The circle is 7 and the middle cell is 6. Five candidates collapsed to one on the strength of a single given.
+
+## How to Solve Arrow Sudoku: What the Measurement Tells Us
+
+The numbers point at a clear order of attack:
+
+- **Hunt arrows with a given on the line first.** When a line cell is already filled, the arrow becomes "circle = known + small set," and the circle usually collapses. That is exactly what happened in both examples above.
+- **Line length decides your filters before you write any candidate.** A three-cell line bans 7, 8, and 9 from all three cells at once. A two-cell line forces the circle to be at least 3. Instant, and free.
+- **Feed results back into the sum.** Once the circle is known, the line cells lose every combination that does not sum to it — that is the 83% line-cut statistic. When a line cell gets pinned by ordinary row, column, or box logic, push that value straight back into the arrow.
+
+Real talk: in the three puzzles we measured, more than half of all consistent arrows could pin their own circle to a single digit with no other help. Players who treat the grid as plain sudoku and ignore the arrows are leaving the strongest constraint on the board untouched. Start your scan at the arrows with filled line cells — they are the easiest wins, and every one of them pays.
+
+## Try It Yourself
+
+Arrow sudoku rewards the same candidate thinking you already practice here. Warm up with a full board solve in our [step-by-step sudoku guide](/guides/sudoku-step-by-step), watch single candidates fall in the [hints tool](/hints), and generate fresh puzzles at your level in the [maker](/maker). If you want more room to stretch the habit, [16x16 mega sudoku](/mega) runs the identical logic on a bigger canvas.
