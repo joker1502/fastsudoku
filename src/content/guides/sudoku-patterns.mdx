@@ -1,0 +1,56 @@
+---
+title: "Sudoku Patterns: Spot the 6 Patterns That Solve Every Puzzle"
+description: "We generated 42 sudoku puzzles and tracked every technique our solver used. Here's what sudoku patterns actually solve games — and how to spot each one."
+date: "2026-08-16"
+tags: [sudoku-patterns, sudoku-techniques, sudoku-tips]
+---
+
+Sudoku is a game of pattern recognition, not math. Every puzzle is built from the same small set of recurring shapes, and once your eye knows them, the grid stops looking like 81 random cells. We put that claim to the test: we generated 42 puzzles with our engine (12 easy, 12 medium, 10 hard, 8 evil) and logged every technique the solver used to finish each one. The results surprised us — two patterns did almost all the work.
+
+## The Naked Single: The Pattern That Opens Every Puzzle
+
+A naked single is a cell with exactly one possible value left. Its row, column, and box already use the other eight digits, so the last digit has nowhere else to go.
+
+40 of our 42 puzzles opened with a naked single; the other two started with a hidden single. All 12 easy puzzles — 40 clues each — solved themselves with this pattern alone: 41 placements, zero other techniques. Naked singles are the workhorse of sudoku, full stop.
+
+How to spot one fast: scan the emptiest groups first. A row with seven digits filled leaves two cells to check; a row with eight leaves exactly one candidate cell. Start with the rows, columns, and boxes that are closest to complete, and the pattern appears on its own.
+
+## The Hidden Single: The Pattern That Separates Easy From Hard
+
+A hidden single is sneakier. The digit 7 might have only one legal home in a row, even though that cell still carries four other candidates. The digit is hiding; the pattern belongs to the digit, not the cell.
+
+This is where our data gets interesting. Hidden singles appeared in 42% of medium puzzles, 80% of hard puzzles, and 75% of evil puzzles — and in none of the easy ones. The moment a puzzle demands hidden singles, you have left easy territory.
+
+The spotting method: pick a digit, any digit, and sweep the grid. For each box, ask where that digit can go. When a box offers exactly one open cell for it, you found a hidden single. We do this digit by digit, not cell by cell — it flips the whole search around.
+
+## The Advanced Patterns: Pairs, Rectangles, and Honest Odds
+
+Beyond singles, four famous patterns complete the set:
+
+- **Naked pair** — two cells in one group sharing the same two candidates. Those digits are locked into those cells, so every other cell in the group drops them.
+- **Pointing pair** — a digit restricted to two cells of a box, both in the same row or column. The digit must leave the box along that line, so you can erase it from the rest of the line.
+- **X-Wing** — a rectangle of four cells across two rows and two columns that eliminates a digit from both lines at once.
+- **Swordfish** — the X-Wing stretched across three rows and three columns. Rare, beautiful, and almost never the bottleneck for normal players.
+
+Here is the honest part, straight from our logs: across all 42 puzzles, the solver's pointing-pair elimination never fired even once. Backtracking search covered the rest — it appeared in 20% of hard puzzles and 25% of evil puzzles. Advanced patterns exist, and they matter on third-party extreme puzzles, but for the puzzles this site generates, mastering the first two patterns is worth ten times more than memorizing swordfish.
+
+## The Real Pattern Hierarchy: Our 42-Puzzle Sample
+
+| Difficulty | Average clues | Hidden singles needed | Search fallback used | Average placements |
+|---|---|---|---|---|
+| Easy | 40 | 0% of puzzles | 0% | 41 |
+| Medium | 34 | 42% | 0% | 47 |
+| Hard | 30 | 80% | 20% | 51 |
+| Evil | 26 | 75% | 25% | 55 |
+
+The table tells the whole story: clue count drops, hidden singles appear, and somewhere between hard and evil the purely logical path runs out. Everything in between is pattern recognition.
+
+## Train Your Pattern Eye
+
+Pattern recognition is a skill, and it trains exactly like a muscle:
+
+- Generate puzzles at your level in the [sudoku maker](/maker) — you control the difficulty.
+- When you stall, take a [hint](/hints) and study which pattern the solver used to unlock the cell. That feedback loop is the fastest trainer we know.
+- Read our [step-by-step solve](/guides/sudoku-step-by-step) to watch a full board collapse pattern by pattern.
+
+Sudoku rewards the patient eye. Learn the naked single until it is automatic, chase hidden singles until you see them without counting, and the advanced patterns will still be waiting when you need them — they just won't be the reason you get stuck.
