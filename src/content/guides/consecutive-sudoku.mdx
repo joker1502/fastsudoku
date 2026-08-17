@@ -1,0 +1,77 @@
+---
+title: "Consecutive Sudoku Rules: How Bars Change Every Move"
+description: "We measured 224 real consecutive bars on 6 engine-generated puzzles: 80% pin a cell outright while the no-bar rule strips candidates. Full rules inside."
+date: "2026-08-17"
+tags: [consecutive-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Consecutive sudoku is normal sudoku plus a line of white bars: two cells joined by a bar must hold consecutive digits, and two cells without a bar must not. That second half of the rule does more work than most players expect. We generated six puzzles with our engine — two easy, two medium, two hard — solved each one, and treated every adjacency in the solutions as a potential bar. Across 864 adjacencies we found 224 real bars. Here is what they taught us.
+
+## Consecutive Sudoku Rules in One Paragraph
+
+The nine rows, nine columns, and nine 3x3 boxes all behave exactly like normal sudoku. On top of that, every pair of side-by-side cells (up, down, left, right) is either joined by a bar or left bare:
+
+- A **bar** means the two digits must differ by exactly one: 1-2, 5-6, 8-9. Same digits are banned, and gaps of two or more are banned.
+- **No bar** means the opposite — the two digits may not be consecutive. In standard notation every bar is shown, so an empty gap is a constraint, not an absence of information.
+
+Two edge facts drop straight out of the definition. The digit 1 has exactly one consecutive partner, 2; the digit 9 has exactly one, 8. Any bar that touches a 1 or a 9 locks the other end the instant you see it. And because 4, 5, and 6 each have two partners, a bar touching one of those digits only narrows the other end to two options — the middle digits are the flexible ones.
+
+Real talk: beginners treat the bars as decoration and solve the grid as plain sudoku. The bars are not decoration. They are the strongest single-source constraint on the board, and they fire before you write your first candidate.
+
+## What 224 Bars Taught Us: The Measurement
+
+Every solved 9x9 grid offers 144 side-by-side pairs. Our six solutions carried between 31 and 45 bars each — a mean of 37.3, or 25.9% of all adjacencies. Pure chance puts the number at 22.2%, so a solved grid naturally produces roughly one barred pair in four. Puzzle makers do not invent bars from thin air; they select from the bar set the solution already contains.
+
+| Difficulty | Clues | Bars in solution |
+|:-----------|------:|-----------------:|
+| Easy 1 | 40 | 45 |
+| Easy 2 | 40 | 40 |
+| Medium 1 | 34 | 35 |
+| Medium 2 | 34 | 33 |
+| Hard 1 | 30 | 31 |
+| Hard 2 | 30 | 40 |
+
+Then we applied the rule to the puzzle state, one pair at a time, before any solving logic: 
+
+- 224 barred pairs measured; 179 of them (79.9%) left at least one end with exactly one possible digit.
+- 156 pairs (69.6%) actually cut candidate lists on first application, removing 1.45 candidates per pair on average.
+- The bar rule alone pinned 334 cells to a single digit across six puzzles — 55.7 per puzzle.
+- 150 bars had a given on one side, and 133 of those (88.7%) pinned the empty partner immediately. The partner averaged 1.11 candidates left — usually one, occasionally two.
+
+The no-bar rule ran quieter and still mattered: across 640 unbarred pairs it removed 160 candidates, an average of 0.25 per pair. Small per pair, but the pairs outnumber bars three to one, and every removal is a digit you never have to test.
+
+Push both rules to a fixpoint — keep applying them until nothing changes — and 385 cells across the six puzzles (64.2 per puzzle) end up with exactly one candidate. On easy grids that is the whole solve.
+
+## Two Worked Examples
+
+Here is the strongest bar-and-given case from our hard puzzle (30 clues):
+
+```
+Row 7: 0 0 8 0 1 5 0 0 0
+Row 8: 2 0 0 0 0 0 0 0 4
+```
+
+The cell at row 7, column 1 is empty with candidates `{3, 4, 6, 7}`. A bar connects it downward to row 8, column 1, where a 2 sits. The bar says the pair must differ by one, and only one candidate satisfies that: 3 sits next to 2, while 4, 6, and 7 do not. Four candidates collapse to one on the strength of a single given.
+
+The no-bar rule gets its own moment in the same grid:
+
+```
+Row 6: 0 9 0 0 2 6 0 1 0
+```
+
+The cell at row 6, column 7 carries candidates `{3, 5, 7, 8}`. The 6 to its left has no bar between them, so the pair may not be consecutive. That bans 5 and 7, leaving `{3, 8}`. Two candidates gone without a single pencil mark — and the 3 turns out to be correct.
+
+## How to Solve Consecutive Sudoku: Order of Attack
+
+The numbers point at a clear sequence:
+
+- **Hunt barred pairs with a given first.** 88.7% of them pin the empty partner on contact. When the given is a 1 or a 9, the partner is forced outright; when it is a middle digit, the partner drops to two options.
+- **Then sweep the no-bar rule next to every given.** A fixed digit bans its two neighbors from all surrounding cells that lack a bar. This is the quiet worker — 160 eliminations in our six grids, most of them cheap.
+- **Feed every placement back into the bars.** Each new digit turns nearby bars into instant pins and nearby gaps into double bans. The fixpoint is not a theory; our propagation pass pinned 64.2 cells per puzzle, and on the easy grids that single pass solved almost everything.
+- **Watch the 1 and 9 edges.** They are the only digits with one partner, which makes every bar they touch a forced move.
+
+Real talk: if you solve consecutive sudoku like plain sudoku, you are throwing away the highest-value constraints on the board. The bar rule pins something on four out of five contacts. Start your scan at bars with filled cells — they are the fastest wins in the variant, and each one pays into the next.
+
+## Try It Yourself
+
+Consecutive sudoku rewards the same candidate thinking you already practice here. Watch single candidates fall in the [hints tool](/hints), warm up on a full board in the [step-by-step sudoku guide](/guides/sudoku-step-by-step), and generate fresh puzzles at your level in the [maker](/maker). When you want more room to stretch the habit, [16x16 mega sudoku](/mega) runs the identical logic on a bigger canvas.
