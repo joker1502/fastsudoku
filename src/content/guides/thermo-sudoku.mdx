@@ -1,0 +1,89 @@
+---
+title: "Thermo Sudoku Rules: Why Clues Drop from 24 to 17"
+description: "We generated six grids and dug each to its minimum: thermometers cut the clue count from 24 to 17 on average. Full thermo sudoku rules and window math inside."
+date: "2026-08-18"
+tags: [thermo-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Thermo sudoku is normal sudoku plus thermometers: a line that starts with a round bulb and ends in a flat tip, and the digits along that line must strictly increase from bulb to tip. One rule, and it replaces a shocking number of givens. We generated six grids with our engine and dug each one to its absolute minimum under both rule sets — classic sudoku and thermo sudoku on identical solutions. The thermometers dropped the clue count from 24 to 17 on average. Here is the exact math behind that, plus the full rule and the numbers we measured.
+
+## Thermo Sudoku Rules in One Paragraph
+
+The nine rows, nine columns, and nine 3x3 boxes all behave exactly like normal sudoku. Each thermometer adds one constraint:
+
+- The **bulb** (the rounded end) is the smallest point of the line.
+- The **tip** (the flat end) is the largest point of the line.
+- Every step along the line must increase: bulb &lt; next cell &lt; next cell &lt; ... &lt; tip.
+- The line can turn corners, but it never visits a cell twice.
+
+The rule has a mathematical spine most players never notice: a thermometer of length L leaves every cell on it exactly **10 − L** candidate digits. The bulb can never hold 9, because something larger has to follow it. The tip can never hold 1, because everything before it is smaller. Work it out for every position and each cell is trapped in a sliding window of exactly 10 − L digits:
+
+- Length 2: bulb {1–8}, tip {2–9} — a tiny greater-than pair with 8 candidates left per cell.
+- Length 3: each cell keeps 7 digits: {1–7}, {2–8}, {3–9}.
+- Length 4: 6 digits per cell; the tip can no longer touch 1, 2, or 3.
+- Length 5: 5 digits per cell — half the board's pencil marks are gone before you start.
+- Length 8: two digits per cell. The bulb is 1 or 2, the tip is 8 or 9.
+- Length 9: one digit per cell. The whole line is forced to 1-2-3-4-5-6-7-8-9 the moment you read it.
+
+Real talk: beginners treat the thermometers as decoration and solve the grid as plain sudoku. The thermometers are not decoration. They are the strongest constraint on the board, and they shrink candidates before you write a single pencil mark.
+
+## What 36 Thermometers Taught Us: The Measurement
+
+To see how much work the rule actually does, we generated six solved grids with our engine — two easy, two medium, two hard — and placed six thermometers on each (lengths 5, 4, 3, 3, 2, 2, a typical published mix). Then we dug both puzzles to the bone: remove a clue, check uniqueness, keep it removed only if the solution stayed unique, repeat until nothing could be removed. Every removal of every cell on every grid got a full uniqueness proof, twice — roughly a thousand backtracking searches in total. Same solutions, same removal order, one variable changed: whether the thermometers were on the board.
+
+| Grid | Difficulty | Classic minimum | Thermo minimum | Clues saved |
+|:-----|:-----------|----------------:|---------------:|------------:|
+| 1 | Easy | 24 | 17 | 7 |
+| 2 | Easy | 24 | 17 | 7 |
+| 3 | Medium | 25 | 17 | 8 |
+| 4 | Medium | 24 | 17 | 7 |
+| 5 | Hard | 24 | 16 | 8 |
+| 6 | Hard | 25 | 15 | 10 |
+
+Every single grid needed fewer givens once the thermometers were in play. Classic digging bottomed out at 24–25 clues (mean 24.3). Thermo digging bottomed out at 15–17 (mean 16.5). The thermometers replaced an average of **7.8 givens per puzzle** — on one hard grid they stood in for ten clues.
+
+The same story shows up on the finished grids themselves. We took the classic 24–25 clue states, kept the thermometers, and reapplied the window rule to every empty cell on a line:
+
+- The windows removed 72 candidates across six grids — 16, 13, 11, 7, 12, and 13 per grid.
+- 48 thermo cells (4–10 per grid) lost at least one candidate to the window alone.
+- On top of that, the windows pinned cells to a single digit that plain row/column/box logic left with two or more options — up to two per grid.
+
+None of those deletions cost a guess. They are free deductions the moment the puzzle is printed.
+
+## The Window Rule, Worked on a Real Grid
+
+Here is grid 3 from the measurement, 25 classic clues. Two of its thermometers do the heavy lifting below:
+
+```
+. . 8 . . . . . 1
+. . 4 . . . 6 . 7
+7 1 3 . 4 . . . .
+. . . . 8 4 . . 6
+9 . . . . 7 1 . .
+. . . 6 . . . . .
+6 5 . . . 3 9 . .
+. 3 . . . . 4 5 .
+. . 9 1 . . . . .
+```
+
+Two lines matter here. Line 1 runs along row 2: bulb at column 5, then column 4, then a given 4 at column 3, ending at the tip in column 2. Line 2 runs down the first column: bulb at row 1, middle cell at row 2, and a given 7 at the tip in row 3.
+
+Watch the tip of line 1 — cell (row 2, column 2). Row, column, and box logic leave it with candidates `{2, 9}`. The tip window for a length-4 line is `{4, 5, 6, 7, 8, 9}` — the tip must exceed everything behind it, so it can never sit on 1, 2, or 3. That single fact deletes the 2, and the tip is **9**. Meanwhile the given 4 splits the line in half: every cell to its left must be below 4, every cell to its right above 4. The bulb at column 5 drops from `{1, 2, 3, 5, 9}` to `{1, 2, 3}`; the cell at column 4 drops from `{2, 3, 5, 8, 9}` to `{2, 3}`.
+
+Line 2 shows the second trick: order pins identical sets. The bulb (row 1, column 1) and the middle cell (row 2, column 1) both reduce to `{2, 5}`, with a given 7 waiting at the tip. Two cells, the same two digits, a strict order between them. The bulb must be the smaller one: **2**, and the middle cell is **5**. Same two-candidate set, and the thermometer resolves it without a single extra pencil mark.
+
+## How to Solve Thermo Sudoku: Order of Attack
+
+The numbers point at a clear sequence:
+
+- **Window every cell on a line before anything else.** The moment you see a thermometer, write its windows next to the cells: bulb {1 to 10−L}, tip {L to 9}, everything between sliding one step. It costs seconds and it removed 72 candidates in our six grids.
+- **Attack the longest lines first.** A length-5 line leaves five digits per cell; a length-2 pair leaves eight. The longer the mercury trail, the tighter the squeeze, so the biggest lines pay first.
+- **Treat a given on a line as a wall.** Everything before a given sits strictly below it; everything after sits strictly above. In our measurement this split alone pinned whole segments.
+- **Hunt for identical small sets in sequence.** When two neighbouring cells on the same line share the same two candidates, the order resolves them: smaller first, larger second. Same principle works with three cells sharing three candidates.
+- **Feed every placement back into the line.** Each digit you place tightens the window of the cell next to it and re-splits what remains. The pins cascade — that is the mechanical reason 17 clues were enough.
+
+Real talk: if you solve thermo sudoku like plain sudoku, you are ignoring the most valuable constraint on the board. Plain logic alone needs 24-25 clues to stay unique; with thermometers on the grid, our solver proved uniqueness with 15-17. The lines are doing work whether you use them or not — so use them first, and the rest of the grid falls faster than you expect.
+
+## Try It Yourself
+
+Thermo sudoku rewards the same candidate thinking you already practice here. Watch single candidates fall in the [hints tool](/hints), warm up on a full board in the [step-by-step sudoku guide](/guides/sudoku-step-by-step), and generate fresh puzzles at your level in the [maker](/maker). When you want more room to stretch the habit, [16x16 mega sudoku](/mega) runs the identical logic on a bigger canvas.
