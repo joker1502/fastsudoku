@@ -1,0 +1,65 @@
+---
+title: "Sandwich Sudoku Rules: How 18 Outside Sums Replace Cell Clues"
+description: "We dug six tested grids to their minimum: eighteen sandwich sums cut the clue count from 24.7 to 12.2 on average. Full rules, the zero-sum trick, and the math."
+date: "2026-08-19"
+tags: [sandwich-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Sandwich sudoku is normal sudoku with the cell givens mostly stripped away and replaced by eighteen numbers printed outside the grid — one on the right of each row, one below each column. Each number is the bread-based sum: in that row or column, find the 1 (one slice) and the 9 (the other slice), and the clue tells you the sum of every digit sitting between them. If the 1 and 9 are side by side, the sum is 0. We generated six grids with our engine and dug each to its absolute minimum under both rule sets — classic sudoku and sandwich sudoku — and the eighteen outside sums replaced an average of **12.5 cell givens per puzzle**. Classic digging bottomed out at 23–26 clues; sandwich digging bottomed out at 11–14. Here is the exact rule, the numbers we measured, and the deduction that does most of the work.
+
+## Sandwich Sudoku Rules in One Paragraph
+
+The nine rows, nine columns, and nine 3x3 boxes obey normal sudoku exactly. The sandwich twist lives entirely outside the grid:
+
+- Each row has a clue on its right edge; each column has a clue below it.
+- In that line, locate the **1** and the **9** — the two slices of bread.
+- The clue equals the **sum of every digit strictly between them** (the filling).
+- If the 1 and 9 touch, the filling is empty, so the clue is **0**.
+
+Two consequences fall out immediately. First, a line always contains exactly one 1 and one 9, so once you place one, the other is anchored in the same line. Second, because the digits 1 through 9 add up to 45, a clue tells you two things at once: the sum *inside* the bread and, by subtraction, the sum of every cell *outside* the bread too. A row with clue 26 means the filling sums to 26 and the 1, the 9, and the four cells outside them together account for 45 − 26 = 19.
+
+Real talk: beginners stare at the numbers outside the grid and treat them as decoration to check at the end. They are the only real clues you get. A sandwich puzzle hands you cell givens as the exception, not the rule — most of your deduction comes from those eighteen sums and nothing else.
+
+## What Six Grids Taught Us: The Measurement
+
+To see how much work the rule actually does, we generated six solved grids with our engine — two easy, two medium, two hard — and computed the eighteen sandwich sums for each (the row clue on the right, the column clue below). Then we dug every grid to the bone twice. Classic mode: remove a cell, prove uniqueness by standard sudoku alone, keep it removed only if the solution stayed unique. Sandwich mode: same solutions, same removal order, but every uniqueness proof had to hold with the eight+ten outside sums as fixed constraints. Roughly a thousand backtracking searches per grid, twice over.
+
+| Grid | Difficulty | Classic minimum | Sandwich minimum | Clues saved |
+|:-----|:-----------|----------------:|-----------------:|------------:|
+| 1 | Easy | 23 | 12 | 11 |
+| 2 | Easy | 24 | 12 | 12 |
+| 3 | Medium | 26 | 14 | 12 |
+| 4 | Medium | 24 | 11 | 13 |
+| 5 | Hard | 26 | 11 | 15 |
+| 6 | Hard | 25 | 13 | 12 |
+
+Every single grid needed fewer cell givens once the outside sums were in play. Classic digging bottomed out at 23–26 clues (mean 24.7). Sandwich digging bottomed out at 11–14 (mean 12.2). The eighteen sums stood in for an average of **12.5 givens per puzzle** — on one hard grid they replaced fifteen cells.
+
+That saving is bigger than the thermometers measured last week (7.8 clues), and it makes sense: the thermo rule constrains a handful of specific cells, while a sandwich clue constrains the *entire line it labels* — where both bread slices sit and what fills the gap between them.
+
+## The Zero-Sum Trick, Worked on a Real Grid
+
+Here is grid 1 from the measurement, dug to its 12-clue sandwich minimum. The interesting rows are 1 and 8, both with clue **0**:
+
+row 1: 1 at column 7, 9 at column 8 — adjacent, filling empty, sum 0
+row 8: 1 at column 5, 9 at column 6 — adjacent, filling empty, sum 0
+
+A zero clue is the most powerful deduction in the variant, because it pins the 1 and 9 to neighbouring cells. In row 1, once the 9 is placed the 1 must be immediately next to it — and vice versa. In our full solution, rows 1 and 8 are adjacent pairs, and so are three columns. When a clue reads 0, you are not weighing a sum; you are being handed an exact adjacency, which almost always collapses a row or column into a known two-cell block.
+
+Now take the opposite extreme. Row 6 has clue 26, the largest in the grid, with filling [7, 5, 6, 8] sitting between the 1 at column 2 and the 9 at column 7. Eighteen digits fill the row; the filling takes four of them and sums to 26; the remaining 1, 9, and three outer cells must account for 45 − 26 = 19. That subtraction is the hidden second half of every clue: a large sandwich sum means the 1 and 9 are far apart and the middle is heavy, so the small digits 1 and 9 are pushed toward the row's edges.
+
+## How to Solve Sandwich Sudoku: Order of Attack
+
+The numbers point at a sequence that wastes the least information:
+
+- **Hunt zero clues first.** They fix an adjacent 1-9 pair and are the cheapest constraints on the board. In our six grids the zeros were the stepping stones every other row collapsed after.
+- **Read each clue as two facts.** A clue tells you the filling sum, but subtract it from 45 and it also tells you the outside sum. Use both halves. A row with clue 26 whose outside half is 19 has its 1 and 9 squeezed to the edges.
+- **Anchor the 1 and 9 before the middle.** Since each line holds exactly one 1 and one 9, treating the bread positions as unknowns and the clue as their constraint is far stronger than trying to pencil-mark every cell. Most of a sandwich grid is solved by locating 1 and 9, not by filling digits.
+- **Watch which sums are impossible.** In any row, the filling can only be weak sums when the bread is close. If a clue is 3, the 1 and 9 cannot be far apart — the middle can only hold tiny digits. A clue of 35 pushes them to the very ends.
+- **Let the outer boxes lock.** Once 1 and 9 are placed in enough rows and columns, the 3x3 boxes they pass through get constrained by column sums on one axis and row sums on the other. That cross-check is what turned our 12-clue puzzles back into full grids with no guessing.
+
+Real talk: if you solve sandwich sudoku like plain sudoku, you spend the whole puzzle ignoring the only information you were given. Plain logic alone needs 24–25 clues to stay unique; with the eighteen outside sums in play, our solver proved uniqueness with 11–14. The numbers on the edge are doing the work whether you use them or not — so read them first, and the middle of the board stops being a mystery.
+
+## Try It Yourself
+
+Sandwich sudoku sharpens the same scanning habit you already use here. Watch single candidates fall in the [hints tool](/hints), work a full board step by step in the [step-by-step sudoku guide](/guides/sudoku-step-by-step), and generate fresh puzzles at your level in the [maker](/maker). When you want to stretch the habit on a bigger canvas, [16x16 mega sudoku](/mega) runs the identical row, column, and box logic with sixteen digits and four-cell boxes.
