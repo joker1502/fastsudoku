@@ -1,0 +1,62 @@
+---
+title: "Greater Than Sudoku: How 144 Inequality Signs Replace 23 Clues"
+description: "We dug six grids to the bone: with every edge carrying a greater-than sign, the puzzle drops from 24.7 cell clues to one on average. Rules and order of attack."
+date: "2026-08-20"
+tags: [greater-than-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Greater than sudoku is normal sudoku with every single cell given stripped away and replaced by one small symbol between each pair of side-by-side cells: a `>` or `&lt;`, pointing at the smaller digit. No numbers printed in the grid at all. It sounds like a gimmick, but the signs do the work of nearly the whole board. We generated six grids with our engine and dug each to its absolute minimum under both rule sets — classic sudoku and greater-than sudoku on identical solutions — and the inequality signs replaced an average of **23.7 cell givens per puzzle**. Classic digging stopped at 22–26 clues; greater-than digging stopped at 0–2. Here is the exact rule, the numbers we measured, and the single sign that collapses a grid.
+
+## Greater Than Sudoku Rules in One Paragraph
+
+The nine rows, nine columns, and nine 3x3 boxes obey normal sudoku exactly — each row, column, and box still holds 1 through 9 once each. The greater-than twist lives entirely on the edges between cells:
+
+- Between every two horizontally adjacent cells sits a sign: either `&gt;` or `&lt;`.
+- Between every two vertically adjacent cells sits a sign too.
+- The sign points at the smaller digit. A `&gt;` between cells A and B means A holds the larger number; a `&lt;` means B does.
+- Where a cell already holds a given digit, both of its neighbours must respect the signs pointing toward it.
+
+There are 144 such signs on a standard board — 72 along the rows, 72 down the columns. Every cell has up to four neighbours each silently telling it a lower or upper bound.
+
+Real talk: beginners treat the signs as decoration and try to solve the empty grid like a normal sudoku, waiting for a number to appear. That never happens fast enough. The signs are not decoration — they are the whole game. A cell with a `&gt;` pointing at it cannot hold 1, because 1 has nothing smaller to sit on its other side; a cell that points its `&gt;` away cannot hold 9, because 9 has nothing larger to follow it.
+
+## What 864 Signs Taught Us: The Measurement
+
+To see how much work the rule actually does, we generated six solved grids with our engine — two easy, two medium, two hard — and computed all 144 inequality signs for each from its solution. Then we dug every grid to the bone twice. Classic mode: remove a cell, prove uniqueness by standard sudoku alone, keep it removed only if the solution stayed unique. Greater-than mode: same solutions, same removal order, but every uniqueness proof had to hold with all 144 signs still printing their directions. Roughly a thousand backtracking searches per grid, twice over.
+
+| Grid | Difficulty | Classic minimum | Greater-than minimum | Clues saved |
+|:-----|:-----------|----------------:|---------------------:|------------:|
+| 1 | Easy | 24 | 1 | 23 |
+| 2 | Easy | 26 | 2 | 24 |
+| 3 | Medium | 22 | 1 | 21 |
+| 4 | Medium | 24 | 1 | 23 |
+| 5 | Hard | 26 | 1 | 25 |
+| 6 | Hard | 26 | 0 | 26 |
+
+Every single grid needed far fewer givens once the signs were in play. Classic digging bottomed out at 22–26 clues (mean 24.7). Greater-than digging bottomed out at 0–2 (mean 1.0). The 144 signs stood in for an average of **23.7 givens per puzzle** — on one hard grid they replaced every one of the 26.
+
+That is bigger than the thermometers (7.8) and the eighteen sandwich sums (12.5) measured in earlier posts. It makes sense once you count the resource: a thermometer or a sandwich sum constrains one line, but a greater-than sign sits on a shared edge and squeezes two cells at once, in two directions, and there are 144 of them. Push them deep and the grid can be pinned without a single printed number.
+
+## The Single-Pin Trick, Worked on a Real Grid
+
+Here is grid 1 from the measurement, dug to its greater-than minimum. It needs exactly one given digit — a **6** in the bottom-right cell, row 7, column 9 — plus the full set of signs.
+
+That lone 6 is the keystone. Three cells touch it: the cell to its left (row 7, column 8), the cell above it (row 6, column 9), and the cell below it (row 8, column 9). Check the signs on those three shared edges and every one of them points at the 6 — each neighbour is the larger digit. Row, column, and box logic alone leave each of those three neighbours with the candidates `{1, 2, 3, 4, 5, 7, 8, 9}`. The sign does the rest: because the neighbour must exceed 6, the whole low half `{1, 2, 3, 4, 5}` is impossible. Each neighbour collapses to `{7, 8, 9}` before you write another mark. Three cells, five candidates deleted each, from one printed digit and three arrows.
+
+The same logic ripples. Every newly placed digit becomes another anchor: anything it points at must be smaller, anything that points at it must be larger. Run that around the grid and the signs lock the low and high ends of every line, which is the mechanical reason one given held 81 cells with a unique solution.
+
+## How to Solve Greater Than Sudoku: Order of Attack
+
+The numbers point at a sequence that wastes the least information:
+
+- **Encode the signs before you start.** The fastest way to read a board is to mark, on every cell that points at nothing, the fact that it cannot be 1, and on every cell that is pointed at, the fact that it cannot be 9. Cells doing both at once are the strongest anchors on the board.
+- **Anchor on any given digit.** A printed number is a lighthouse: every sign touching it immediately floors or ceilings its neighbours. In grid 1 the single 6 deleted five candidates from all three neighbours at once.
+- **Trace long directed chains.** When a run of signs all point the same way — cell A `&gt;` cell B `&gt;` cell C — the values must slide down in order, which shaves the top off A and the bottom off C and collapses the middle to a tight window.
+- **Attack the 1s and 9s first.** Every row, column, and box needs exactly one 1 and one 9; the signs tell you where they cannot sit. Place the extremes and the spaces between them resolve like a normal sudoku.
+- **Let the boxes cross-check.** Once a row and a column both narrow a shared box, the row signs and column signs verify each other. That cross-check is what turned our 0–2-given puzzles back into complete grids with no guessing.
+
+Real talk: if you solve greater-than sudoku like plain sudoku, you ignore the only information printed on the page. Plain logic alone needs 24–25 clues to stay unique; with all signs active, our solver proved uniqueness with 0–2. The arrows are doing the work whether you use them or not — so read them first, and the empty board stops being a wall of blanks.
+
+## Try It Yourself
+
+Greater than sudoku hones the same candidate-shrinking habit you already use here, just sooner: you kill the low and high ends before they ever become a pencil mark. Watch candidates fall one at a time in the [hints tool](/hints), warm up on a conventional grid step by step in the [step-by-step sudoku guide](/guides/sudoku-step-by-step), and generate unlimited fresh puzzles at your level in the [maker](/maker). For more room to stretch the habit, [16x16 mega sudoku](/mega) runs the identical row, column, box, and inequality logic on a much bigger canvas.
