@@ -1,0 +1,80 @@
+---
+title: "Anti-Knight Sudoku Rules: How the Knight Ban Cuts Clues from 25 to 14"
+description: "We dug six anti-knight grids to the bone: the knight-ban replaces 11 givens a puzzle and creates sudoku's oddest opening. Full rules, geometry, and numbers."
+date: "2026-08-21"
+tags: [anti-knight-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Anti-knight sudoku is normal sudoku with one added ban: a digit may never sit on two cells a chess knight's move apart — two steps one way, one step the other. No new symbols, no extra printed clues, just a rule that quietly deletes candidate digits across the whole board. We generated six grids with our engine, checked each solution obeys the knight rule, and dug each to its minimum under both rule sets. The knight ban replaced an average of **11 givens per puzzle**: classic digging bottomed out at 23–26 clues, anti-knight digging at 13–14. Here is the exact rule, the geometry behind it, and the numbers we measured.
+
+## Anti-Knight Sudoku Rules in One Paragraph
+
+The nine rows, nine columns, and nine 3x3 boxes behave exactly like normal sudoku. One extra rule sits on top:
+
+- Pick any two cells that are a **knight's move apart** — two squares in one direction, then one square sideways, forming the chess knight's L shape.
+- Those two cells **cannot hold the same digit**.
+- The rule is symmetric and global: it applies both ways, to every pair of cells on the board, not just cells near the middle.
+
+The rule never tells you where a digit goes. It only tells you where it cannot go. But it does that a lot: on a 9x9 board there are **448 directed knight adjacencies** (224 unordered pairs). Count the ban per cell and the board shows its shape:
+
+- Corner cells: 2 knight-neighbours each (4 cells).
+- Edge cells: 3 or 4 knight-neighbours (8 at 3, 24 at 4).
+- The next ring in: 6 knight-neighbours (20 cells).
+- The 25 cells of the inner 5x5 region: up to **8** knight-neighbours.
+
+Real talk: a classic 9x9 sudoku cell sits in a row, a column, and a box — eight peers. The centre cell of an anti-knight board gets eight *extra* cells it must not match, nearly doubling its peer count. The rule is invisible until you pencil-mark a central region, and then it deletes digits everywhere at once.
+
+## What 448 Knight Adjacencies Taught Us: The Measurement
+
+To see how much work the ban actually does, we generated six solved grids with our engine — two easy, two medium, two hard — and verified each solution satisfies the knight rule (a normal sudoku solution does not automatically; an anti-knight board does). Then we dug every grid down under two rule sets. Classic mode: remove a clue, prove uniqueness by standard sudoku alone, keep it removed only if the solution stayed unique — the same greedy dig the engine already uses. Anti-knight mode: starting from that classic minimum, keep removing clues, but every uniqueness proof had to hold with the knight ban active. Every removal got a full uniqueness proof, hundreds of backtracking searches per grid, twice over.
+
+| Grid | Difficulty | Classic minimum | Anti-knight minimum | Clues saved |
+|:-----|:-----------|----------------:|--------------------:|------------:|
+| 1 | Easy | 25 | 14 | 11 |
+| 2 | Easy | 25 | 14 | 11 |
+| 3 | Medium | 25 | 13 | 12 |
+| 4 | Medium | 26 | 13 | 13 |
+| 5 | Hard | 24 | 14 | 10 |
+| 6 | Hard | 23 | 14 | 9 |
+
+Every single grid needed fewer givens once the knight ban was in play. Classic digging bottomed out at 23–26 clues (mean 24.7). Anti-knight digging bottomed out at 13–14 (mean 13.7). The ban replaced an average of **11 givens per puzzle** — on one medium grid it stood in for thirteen clues.
+
+That saving sits neatly in the middle of this variant series: bigger than the thermometers (7.8) but smaller than the sandwich sums (12.5) and the greater-than signs (23.7). It makes sense in one line: the greatest single resource on a greater-than board is 144 signs squeezing two cells apiece, while the knight ban deletes exactly one digit from one cell at a time — but it does so for the entire board, every cell, all the time.
+
+## The Knight's-Eye Opening, Worked on a Real Grid
+
+Here is grid 1 from the measurement, dug to its classic minimum of 25 clues:
+
+```
+. 1 6 . . . 4 3 .
+. . . . . . . . 1
+. 9 . 4 7 . . 5 2
+. . . 7 9 2 . . 5
+7 . 2 . . 3 . 1 9
+. . . . . . . . .
+. 5 . . 4 . . . .
+. . . . 6 5 . . .
+9 6 . . . . . . .
+```
+
+Now watch the exact centre cell — row 5, column 5. It sits in the middle of the inner 5x5 region, the one spot on the board with all eight knight-neighbours reachable. Classic logic alone leaves it with six candidates: `{3, 4, 5, 6, 8, 9}`. The row and column and box have already knocked out 1, 2, and 7.
+
+The knight ban deletes one more. Row 3, column 4 holds a **4** — and from row 5 column 5, that cell is two rows up and one column left, a perfect knight's move. So the 4 cannot repeat in the centre cell. Its candidates close to `{3, 5, 6, 8, 9}` before you write a single mark.
+
+That is the whole trick in miniature. Not a given, not a chain — just a placed 4 two rows up sitting where it has no right to repeat. On our dug grid the ban deleted at least one candidate in **22 of the empty cells**, and in the central region it struck in almost every one. The centre cell is where the rule bites hardest because it has the most knight-neighbours to break the tie.
+
+## How to Solve Anti-Knight Sudoku: Order of Attack
+
+The ban points at a sequence that wastes the least information:
+
+- **Pencil-mark the centre first.** The cells of the inner 5x5 carry the most knight-neighbours, so they lose candidates fastest. Every time a digit lands, run through its knight-neighbourhood before its row and column.
+- **Use placed digits as invisible givens.** A 5 in a corner cell disqualifies 5 from two cells; a 5 in the centre disqualifies it from eight. One placement can remove a digit from more cells than a classic single ever could.
+- **Hunt for knight-forced singles.** When a cell's classic candidates are `{4, 7}` and a knight-neighbour already holds 4, the cell collapses to 7 with no further logic. These are the anti-knight equivalent of naked singles and they appear constantly on dug boards.
+- **Let the ban break pairs and triples.** A classic naked pair `{2, 5}` in a row dies when one of the pair sits a knight's move from an existing 2 — the ban deletes it and the pair resolves.
+- **Keep row, column, and box logic first.** The knight rule *supplements* standard sudoku, it does not replace it. Attack singles and pointing pairs as usual; the ban is the tiebreaker that turns two-candidate cells into placements.
+
+Real talk: if you solve anti-knight sudoku exactly like plain sudoku, you ignore the only thing that makes it a different puzzle. Classic logic alone needs 23–26 clues to stay unique; with the ban active, our solver proved uniqueness with 13–14. The invisible L-shaped bans are doing the work whether you scan for them or not — so pencil-mark the centre first and the board stops being a wall of blanks.
+
+## Try It Yourself
+
+Anti-knight sudoku hones the candidate-hunting habit you already use here, just one step earlier: you kill digits by position before you ever write them. Watch single candidates fall one at a time in the [hints tool](/hints), warm up on a conventional board step by step in the [step-by-step sudoku guide](/guides/sudoku-step-by-step), and generate unlimited fresh puzzles at your level in the [maker](/maker). For a bigger canvas for the same habit, [16x16 mega sudoku](/mega) runs the identical row, column, and box logic with sixteen digits — where the knight rule multiplies those bans across four times the board.
