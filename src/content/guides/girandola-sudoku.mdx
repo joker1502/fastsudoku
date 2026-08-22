@@ -1,0 +1,92 @@
+---
+title: "Girandola Sudoku: 9 Extra Cells Cut Givens from 24 to 21"
+description: "Six dug girandola grids: a nine-cell pinwheel that replaces 3.5 givens, bans one digit from six cells at once, and passes once in 750 boards. Rules inside."
+date: "2026-08-22"
+tags: [girandola-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Girandola sudoku is normal sudoku plus one extra area: nine marked cells in a pinwheel that reaches from the corners to the middle. Those nine cells must hold the digits 1 to 9 exactly once. Think of it as a tenth box, stretched flat across the board. We dug six girandola grids with our own engine — classic digging bottomed out at 23–26 givens, girandola digging at 20–22. The window replaced an average of **3.5 clues per puzzle**, the smallest saving of any variant in this series. The reason why is the lesson.
+
+## Girandola Sudoku Rules in One Paragraph
+
+The nine rows, nine columns, and nine 3x3 boxes behave exactly like normal sudoku. One extra rule sits on top:
+
+- Nine **marked cells** form a windmill-like pattern across the grid — one cell in each of the nine boxes.
+- Those nine cells are **an additional unit**: together they must contain the digits 1 to 9 exactly once.
+- The rule applies to the whole pattern at once. It is not "each arm of the pinwheel repeats nothing" — it is one single region that happens to be spread across the board.
+
+The pattern is fixed for the variant. Its nine cells sit in the four corners, the four edge-middles of rows and columns five, and the exact centre: (1,1), (1,9), (2,5), (5,2), (5,5), (5,8), (8,5), (9,1), and (9,9). Italian "girandola" means pinwheel, and that is the shape the nine cells trace — a set of blades radiating from the middle cell.
+
+## What the Pinwheel Actually Adds: 26 New Bans
+
+A 3x3 box is a dense unit: its nine cells all share two neighbours inside the box. The girandola pattern is the opposite — its nine cells are spread out precisely so that almost none of them touch. Count the pairs:
+
+- There are **36 pairs** of cells inside the window.
+- **10 of those pairs** already sit in a shared row or column — cells like (1,1) and (1,9), which classic sudoku already forbids from matching.
+- The other **26 pairs** were completely unconstrained before. The girandola rule adds a "these two cells must differ" ban to each one.
+
+That is the whole constraint: 26 new bans, and every single one lives between two cells inside the window. No cell outside the nine marked ones is touched by the rule. Look at the geometry per cell and it gets sharper — the corner and edge cells of the pattern gain 6 new "do not match" peers on top of their 20 classic ones, and even the centre cell, the busiest spot in the window, gains only 4.
+
+Real talk: call it a tenth unit if you like, but it is the weakest kind of tenth unit. An extra box would ban all 36 pairs inside it. The pinwheel covers only 26, and it leaves 72 cells of the board completely alone. That is why girandola saves fewer clues than the other variants in this series — the rule deletes candidates, but only inside a nine-cell corridor.
+
+## What 6,000 Completed Boards Taught Us
+
+Before digging, we checked how often a random completed grid stumbles into the window rule by accident. We completed 6,000 blank boards with the engine's own randomised fill — the same most-constrained-first backtracking the site uses — and tested the nine pinwheel cells:
+
+- Only **8 of 6,000 boards** satisfied the window — roughly **1 in 750**.
+- Typical boards hold only about **6 different digits** in the window (mean 6.1 in a 3,000-board sample). A full 1-9 spread appeared in just 4 of those 3,000.
+
+You cannot grab a regular sudoku solution, draw the pinwheel over it, and expect it to work. The window is satisfied so rarely that girandola puzzles have to be generated window-first, and the dig below started from boards that passed the check.
+
+Then we ran the same greedy dig every variant in this series uses: remove a clue, prove the solution stays unique, keep the removal. Each grid was dug twice — once where uniqueness had to hold by classic rules alone, once where it had to hold with the pinwheel active. Every removal got a full uniqueness proof, twice over, on six grids.
+
+| Grid | Difficulty | Classic minimum | Girandola minimum | Clues saved |
+|:-----|:-----------|----------------:|------------------:|------------:|
+| 1 | Easy | 23 | 21 | 2 |
+| 2 | Easy | 26 | 20 | 6 |
+| 3 | Medium | 23 | 20 | 3 |
+| 4 | Medium | 26 | 21 | 5 |
+| 5 | Hard | 24 | 21 | 3 |
+| 6 | Hard | 24 | 22 | 2 |
+
+Classic digging bottomed out at 23–26 clues (mean 24.3). Girandola digging bottomed out at 20–22 (mean **20.8**). The window replaced an average of **3.5 givens per puzzle** — a real saving, but the smallest in this series by a wide margin. The knight ban saved 11, the sandwich sums saved 12.5, the greater-than signs saved 23.7. The pinwheel saves 3.5, because 26 local bans in nine cells simply do less work than 448 knight adjacencies or 144 comparison signs spread across the whole board.
+
+One more number from the dug grids: only **7 of the 54 window cells** across the six puzzles were given. The pattern starts almost entirely blank and has to be worked out during play — which is exactly where the solving habits below come in.
+
+## The Window Bite, on a Real Grid
+
+Here is grid 1 from the table, dug to its girandola minimum of 21 clues:
+
+```
+. . 1 . 6 . . . .
+2 3 . 7 . . . . .
+. . . . . 3 . 7 .
+8 . . . . . . . .
+. . . 8 . . . 9 .
+7 . 3 . . 2 1 . .
+. . . 6 8 . 4 2 .
+. 4 . . . . 7 . .
+. 5 . . . . . . .
+```
+
+Now watch the pinwheel. Cell (5,8) holds the given **9**, and (5,8) is one of the nine window cells. Every other window cell now has to dodge that 9 — not because of any row, column, or box, but because the window says the nine cells share one set of digits.
+
+The ban lands in six places: (1,1), (1,9), (2,5), (8,5), (9,1), and (9,9). At (1,1) the classic candidates are `{4, 5, 9}` — row, column, and box have already removed everything else. The window deletes the 9, and the cell collapses to `{4, 5}` before you write a single mark. The same 9 disappears from the other five cells, all of them exclusions that classic logic could not make: no row, column, or box in this grid carries a second 9 near any of them.
+
+The two remaining window cells, (5,2) and (5,5), need no help — they sit in the same row as the given 9, so classic sudoku already bars it there. One placed digit, six window-driven deletions, all from a rule that never directly touches a single cell outside the nine marked ones.
+
+## How to Solve Girandola Sudoku: Where the Window Pays
+
+The pinwheel is weak, but it is not dead weight — use it in the right order and it resolves near the end of most puzzles:
+
+- **Treat the nine marked cells as a tenth unit.** When a window cell fills, update the other eight like you would after a box placement. Most solvers forget the window exists and lose the only information it gives.
+- **Pencil-mark the window first.** The pattern's cells sit in busy rows and columns, so their classic candidates are already short. Windows need fewer digits than boxes — every window placement uses up one digit out of nine and shuts it out of eight cells at once.
+- **Hunt window hidden singles.** When seven or eight window cells are placed, the missing digits have exactly one home left. That mirrors a box's hidden single, but across the whole board — and it needs every window cell marked to spot it.
+- **Keep classic logic first.** The window is a tiebreaker, not an engine. Singles, pairs, and pointing pairs resolve the board at the same speed they always do; the pinwheel tips the scales when a cell's candidates are down to two or three.
+- **Do not expect a miracle.** The numbers are what they are: the pinwheel replaces 3.5 givens, so a girandola puzzle plays like a slightly easier classic with one extra scan at the end.
+
+Real talk: if you solve girandola exactly like plain sudoku and glance at the marked cells only when stuck, you are doing it right. The pattern is a filter, not a generator of chains — it deletes digits that have nowhere else to go, and the rest of the solve is ordinary logic.
+
+## Try It Yourself
+
+Girandola sudoku trains the one habit that transfers everywhere: scanning a spread-out unit for used digits. Watch placements land one at a time in the [hints tool](/hints), warm up on a conventional board in the [step-by-step sudoku guide](/guides/sudoku-step-by-step), and generate unlimited fresh 9x9 puzzles at your level in the [maker](/maker). If the pinwheel felt thin, the same series shows how far a constraint can stretch in the other direction — the [anti-knight sudoku guide](/guides/anti-knight-sudoku) cuts clues by 11 with a rule that touches every cell, and the [sandwich sudoku guide](/guides/sandwich-sudoku) cuts 12.5 with row sums. Bigger boards, same window habit: [16x16 mega sudoku](/mega) runs the identical row, column, and box logic with sixteen digits.
