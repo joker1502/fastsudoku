@@ -18,8 +18,8 @@ The nine rows, nine columns, and nine 3x3 boxes all behave exactly like normal s
 
 The rule has a mathematical spine most players never notice: a thermometer of length L leaves every cell on it exactly **10 − L** candidate digits. The bulb can never hold 9, because something larger has to follow it. The tip can never hold 1, because everything before it is smaller. Work it out for every position and each cell is trapped in a sliding window of exactly 10 − L digits:
 
-- Length 2: bulb {1–8}, tip {2–9} — a tiny greater-than pair with 8 candidates left per cell.
-- Length 3: each cell keeps 7 digits: {1–7}, {2–8}, {3–9}.
+- Length 2: bulb `1–8`, tip `2–9` — a tiny greater-than pair with 8 candidates left per cell.
+- Length 3: each cell keeps 7 digits: `1–7`, `2–8`, `3–9`.
 - Length 4: 6 digits per cell; the tip can no longer touch 1, 2, or 3.
 - Length 5: 5 digits per cell — half the board's pencil marks are gone before you start.
 - Length 8: two digits per cell. The bulb is 1 or 2, the tip is 8 or 9.
@@ -76,7 +76,7 @@ Line 2 shows the second trick: order pins identical sets. The bulb (row 1, colum
 
 The numbers point at a clear sequence:
 
-- **Window every cell on a line before anything else.** The moment you see a thermometer, write its windows next to the cells: bulb {1 to 10−L}, tip {L to 9}, everything between sliding one step. It costs seconds and it removed 72 candidates in our six grids.
+- **Window every cell on a line before anything else.** The moment you see a thermometer, write its windows next to the cells: bulb `{1 to 10−L}`, tip `{L to 9}`, everything between sliding one step. It costs seconds and it removed 72 candidates in our six grids.
 - **Attack the longest lines first.** A length-5 line leaves five digits per cell; a length-2 pair leaves eight. The longer the mercury trail, the tighter the squeeze, so the biggest lines pay first.
 - **Treat a given on a line as a wall.** Everything before a given sits strictly below it; everything after sits strictly above. In our measurement this split alone pinned whole segments.
 - **Hunt for identical small sets in sequence.** When two neighbouring cells on the same line share the same two candidates, the order resolves them: smaller first, larger second. Same principle works with three cells sharing three candidates.
