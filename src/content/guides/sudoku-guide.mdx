@@ -1,54 +1,81 @@
 ---
 title: "Sudoku Guide: How to Play, Rules, and Beginner Strategies"
-description: "New to sudoku? This complete beginner guide covers the rules, grid basics, and the first strategies you need to solve your first puzzle with confidence."
+description: "Learn the sudoku rules in 30 seconds, then see how the first moves of a real solve work: we generated 320 puzzles and logged every move our engine made."
 date: "2026-08-10"
 tags: [sudoku guide, sudoku for beginners, how to play sudoku]
 ---
 
-Sudoku looks intimidating at first — a 9x9 grid full of numbers — but the rules are simple enough to learn in two minutes. This guide walks you through everything you need to start solving your first puzzle today.
+Sudoku takes two minutes to learn and one habit to get good at. The rules fit in four lines. The habit is smaller than that: you write a digit only when one cell has a single digit left that can legally live in it. This guide covers both — and it shows you real numbers for what those first moves look like, because that is the part most beginner pages wave at instead of measuring.
+
+We generated 320 puzzles with this site's engine, 80 at each difficulty, and logged every placement the solver made. That is 15,520 moves in the sample. The figures below came out of that run.
 
 ## The Rules in 30 Seconds
 
-- Fill the grid so every **row**, **column**, and **3x3 box** contains the digits **1 through 9** exactly once.
-- Some numbers are already filled in. These are your **clues** — you never change them.
-- There is exactly **one correct solution** to every properly made puzzle.
+- Every **row**, **column**, and **3x3 box** must hold the digits 1 through 9, each exactly once.
+- The numbers already printed are **clues**. You never change them.
+- A properly built puzzle has exactly **one** solution.
 
-That's it. No math, no addition, no language barrier. Sudoku is pure logic.
+No arithmetic, no wordplay, no hidden mechanics. Sudoku is a matching game: place a digit, then honor the constraint everywhere that digit appears.
 
 ## Reading the Grid
 
-A standard sudoku has:
+A standard 9x9 board gives you 81 cells and three ways to group them:
 
-- **9 rows** (numbered 1–9 from top to bottom)
-- **9 columns** (numbered 1–9 from left to right)
-- **9 boxes** (3x3 regions, sometimes drawn with thicker lines)
+- **9 rows**, running left to right.
+- **9 columns**, running top to bottom.
+- **9 boxes**, the 3x3 blocks usually outlined with heavier lines.
 
-Every cell belongs to exactly one row, one column, and one box. A number can only appear **once** in each of those three groups. That single rule drives every solving technique there is.
+Every cell belongs to exactly one row, one column, and one box — three groups, always. A digit may appear only once inside each group it touches. That single constraint drives every technique you will ever use, from the beginner scan to the X-Wing your future self will learn.
 
-## Your First Technique: Scanning
+## What Your First Move Actually Looks Like
 
-Start by scanning the grid for rows, columns, or boxes that are nearly full. The fewer empty cells a group has, the easier it is to fill.
+Here is the most useful thing we found in 320 puzzles: opening moves are boring, and that is great news.
 
-**Example:** if a row has 7 numbers already, only 2 digits are missing. Check which of those 2 digits already appear in the intersecting columns and boxes — often only one spot remains valid.
+A naked single means a cell with exactly one legal candidate left. Our solver opened with one in 100% of the easy puzzles, 100% of the medium puzzles, 92.5% of the hard ones, and 77.5% of the evil ones. Even on the nastiest tier, three out of four puzzles hand you a decided cell on move one.
 
-This process is called **scanning**, and it solves most easy puzzles on its own.
+Sit with that for a moment, because it kills the fear most beginners bring to the grid. You do not need a system before you start. You need to locate the one cell that is already decided — and on an easy grid, that cell is always waiting somewhere.
 
-## The Second Technique: Single Candidate
+Clue counts ran just as tidily. Easy puzzles arrived with 40 clues every single time, medium with 34, hard with 30. Only the evil tier wobbled: 79 of our 80 evil puzzles had 26 clues and one had 27. The engine hits its target clue count on purpose, so difficulty here means fewer starting numbers, not different rules.
 
-Pick an empty cell and ask: which numbers are **not** already in its row, column, or box? If only one number is possible, write it down. This is called a **single candidate** (or *naked single*).
+## Technique One: Scanning Nearly Full Units
 
-Work through the grid cell by cell with this method, and easy and medium puzzles practically solve themselves.
+Start where the grid is almost finished. A row holding eight digits has one empty cell and one missing digit, which makes the placement automatic. A box with five empty cells is harder to read, so leave it and come back.
 
-## Practice With Our Tools
+This is scanning, and the measurement flatters it. Across our 80 easy puzzles, naked singles covered 40.9 of the 41 moves in an average solve — 99.8% of everything. And 77 of those 80 puzzles never needed anything else: scan, place, repeat, done.
 
-The best way to learn is to play:
+Treat that as your first training loop. Scan the nearly full rows, then the nearly full columns, then the nearly full boxes. When a unit offers exactly one candidate cell, write the digit and re-scan.
 
-- Use the [sudoku maker](/maker) to generate puzzles at your chosen difficulty.
-- Stuck on a puzzle? The [hints tool](/hints) on the homepage gives you the next logical step when you need a nudge.
-- Prefer a bigger challenge? Try a [mega sudoku](/mega) 16x16 grid.
+## Technique Two: Single Candidates, and Where Scanning Stops
 
-## What's Next
+Scanning has a ceiling, and it is worth knowing exactly where. When no unit is close enough to full for an instant placement, flip the question: pick an empty cell and ask which digits are still legal there. One survivor means you found a **naked single**. A digit that has exactly one legal home in a whole row, column, or box is a **hidden single** — the digit is decided even though the cell still carries other candidates.
 
-Once scanning and single candidates feel natural, move on to [sudoku logic](/guides/sudoku-logic) for the deeper reasoning patterns, or jump straight into a [step-by-step walkthrough](/guides/sudoku-step-by-step) of a full puzzle from first move to final cell.
+Our logs put that ceiling on a number line. In easy puzzles, the first move that was not a single candidate landed around move 10 on average, and the latest case waited until move 17. Medium pushed the average to move 13, with one puzzle holding out to move 31. Evil cracked far earlier, around move 6.
 
-Sudoku rewards patience — every puzzle is solvable with logic alone, no guessing required. Happy solving!
+So the practical takeaway: scanning and singles carry you through your first ten or so moves of an easy grid, and usually to the very last cell.
+
+## What Changes as the Difficulty Climbs
+
+The tiers do not behave like four different games. They behave like one game with the scaffolding removed at a steady rate.
+
+| Difficulty | Clues | Moves per solve | Naked-single moves | Hidden-single moves | Puzzles solved with singles only |
+|---|---|---|---|---|---|
+| Easy | 40 | 41 | 40.9 (99.8%) | 0.1 | 77 of 80 |
+| Medium | 34 | 47 | 45.5 (96.8%) | 1.5 | 54 of 80 |
+| Hard | 30 | 51 | 41.3 (81.0%) | 6.2 | 17 of 80 |
+| Evil | 26–27 | 55 | 31.5 (57.3%) | 9.5 | 7 of 80 |
+
+Read the last two columns together and the pattern is blunt. Hidden singles climb from 0.2% of easy moves to 17.3% of evil ones. Puzzles that finish on singles alone drop from 77 of 80 to 7 of 80. And when singles run dry on the hard and evil tiers, our solver falls back to search — 6.9% of hard moves and 25.3% of evil moves, roughly a quarter of an evil solve. A human stuck at that same wall reaches for advanced patterns or restarts with clean pencil marks; the engine just searches.
+
+One more number, because beginners ask about advanced techniques sooner than they should. Pointing-pair elimination, a staple of intermediate tutorials, fired 8 times in the entire 15,520-move run. Learning it early buys you almost nothing. Learning single candidates perfectly buys you the easy tier outright.
+
+## Practicing Without Wasting Weeks
+
+Reading about scanning and doing it are different skills, so get reps in:
+
+- Generate puzzles at your chosen difficulty in the [sudoku maker](/maker) — start at easy, stay there until 40-clue grids feel slow.
+- Stuck mid-solve? The [hints tool](/) on the homepage walks your puzzle forward one logical move at a time, which is the fastest way to see which pattern you missed.
+- Want the deeper reasoning laid out? Read [sudoku logic](/guides/sudoku-logic) next, or watch a full board collapse in the [step-by-step walkthrough](/guides/sudoku-step-by-step).
+- Curious how these numbers were collected? We broke down the full pattern distribution in [sudoku patterns](/guides/sudoku-patterns).
+- When the easy tier stops being interesting, [16x16 mega sudoku](/mega) runs the identical row, column, and box logic across a much bigger board.
+
+Learn these two patterns and you can finish every easy puzzle on this site without guessing once. That is the whole beginner curriculum — everything past it is reps and a sharper eye. Generate a grid and see how far scanning carries you.
