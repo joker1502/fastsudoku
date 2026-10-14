@@ -1,0 +1,82 @@
+---
+title: "Killer Sudoku: 22 Cage Sums Replace 20 Given Digits"
+description: "Six killer sudoku grids dug to the bone: cage sums replaced 20 givens on average, and one box outie pinned a cell with no given. Rules and solving order."
+date: "2026-10-14"
+tags: [killer-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Killer sudoku prints no numbers. Instead, the grid arrives carved into dotted cages, each one carrying a small total, and those totals have to do the work that printed digits do in a normal puzzle. That sounds like a gimmick until you measure it: we dug six grids to their absolute minimum with our own engine, once under classic rules and once with the cage totals switched on, and the cages replaced an average of **20 cell givens per puzzle**. Classic digging stopped at 23–26 clues. Killer digging stopped at 3–5. Here is the rule, the measured numbers, and the one deduction that does most of the heavy lifting.
+
+## Killer Sudoku Rules in One Paragraph
+
+Rows, columns, and 3x3 boxes behave exactly like normal sudoku. The cage layer sits on top:
+
+- Every cell belongs to exactly one **cage**, drawn with a dotted outline, and cages are orthogonally connected — you can walk from any cell in a cage to any other through touching sides.
+- Each cage prints one **total** in its top-left cell. The digits in that cage must add up to it.
+- Inside a cage, **no digit repeats**. This is the rule beginners forget, and it is why a two-cell cage totalling 4 is `1+3` and never `2+2`.
+- Cages may cross rows, columns, and box borders freely. A cage is its own unit, but it is not a region in the classic sense — it can spill across three boxes.
+
+Real talk: a cage total is not a digit. It constrains the digits that can sit in that cage, and it says nothing at all about cells outside it. That distinction is the whole game, and it explains why the numbers below look the way they do.
+
+## Six Dug Grids: What the Cages Were Worth
+
+The method is the same one every post in this series uses. Generate six solved grids with the site engine — two easy, two medium, two hard. Toss the givens and rebuild the puzzle as a killer layout: carve the solution into connected cages of 2–6 cells, no repeated digit inside, and print each cage's total. Then dig twice. Classic mode removes a digit, proves uniqueness by standard sudoku alone, and keeps the removal only if the solution stays unique. Killer mode does the same walk with every cage total still in force. Every removal gets a full exhaustive uniqueness proof, on the same six solutions, twice over.
+
+| Grid | Difficulty | Classic minimum | Killer minimum | Givens saved |
+|:-----|:-----------|----------------:|---------------:|-------------:|
+| 1 | Easy | 23 | 5 | 18 |
+| 2 | Easy | 25 | 5 | 20 |
+| 3 | Medium | 25 | 4 | 21 |
+| 4 | Medium | 24 | 4 | 20 |
+| 5 | Hard | 23 | 3 | 20 |
+| 6 | Hard | 26 | 5 | 21 |
+
+Classic digging bottomed out at 23–26 givens (mean 24.3). Killer digging bottomed out at 3–5 (mean **4.3**). The cages stood in for **20 givens per puzzle** — and the raw material was thin: six layouts carried 20 to 24 cages each, 131 in total, averaging 3.7 cells apiece. No single grid printed more than 24 totals, yet a hard grid that needed 26 printed digits under classic rules needed 5 with cages.
+
+That puts killer second in this series, behind only the greater-than signs (23.7 givens saved) and well ahead of the sandwich sums (12.5), the knight ban (11), the thermometers (7.8), and the girandola window (3.5). The reason is reach: a thermometer constrains one line, a sandwich total binds one row, but a cage total binds whatever cells it happens to cover — which in our layouts was often a stubby little group sitting in the corner of a box.
+
+## What 131 Cage Totals Actually Delete
+
+Here is where killer sudoku humbles you. Take each cage and ask the obvious question: given its size and its total, which digits can possibly appear inside it? For a two-cell cage totalling 4 the answer is two digits, `1` and `3`. For a four-cell cage totalling 20 the answer is, well, most of the alphabet of sudoku:
+
+- **82 of 131 cages** left all nine digits possible. Two thirds of the totals, as printed, rule out nothing.
+- Only **3 cages** were squeezed down to two possible digits, and **12** to four or fewer.
+- Averaged over every cell in every cage, a total removed **0.77 of the nine candidate digits** — about 9% of the space.
+- Just **7% of cells** dropped to five candidates or fewer from cage sums alone; **1.2%** reached two.
+
+Cage size is the whole story. Break the 131 cages down and the curve is steep:
+
+| Cage size | Cages | Mean digits still possible | Mean total |
+|:----------|------:|---------------------------:|-----------:|
+| 2 cells | 24 | 5.4 | 8.8 |
+| 3 cells | 34 | 7.9 | 15.1 |
+| 4 cells | 33 | 8.5 | 19.6 |
+| 5 cells | 36 | 8.9 | 25.6 |
+
+A two-cell cage hands you four digits of information on average. A five-cell cage hands you a tenth of one. That is why killer solving feels like it hinges on a handful of small cages: in our six layouts, the 24 two-cell cages carried 3 of the 6 totals that pinned a digit set outright, and the 36 five-cell cages carried none.
+
+The no-repeat rule is doing quiet work inside those numbers. Without it, a two-digit cage totalling 4 could be `2+2`, and a three-cell cage totalling 9 could be `3+3+3`. Killer forbids all of that, so the totals land harder than they look — and the smallest totals are the sharp ones. Our two-cell sums ran from 3 to 15, and the extremes are gifts: 3 only fits `1+2`, 16 only fits `7+9`, 17 only fits `8+9`. Learn those tails and half the small cages on any board resolve before you start the classic scan.
+
+## The 45 Rule Is Where Killer Boards Crack
+
+Every row, every column, and every box holds the digits 1 to 9 exactly once, so each one totals 45. That is true in plain sudoku too, but killer turns it into a weapon: if every cell of a unit belongs to cages that sit entirely inside that unit except for one straggler, the straggler is pinned. Subtract the printed totals of the enclosed cages from 45 and you have the leftover cell's digit — with no given in sight.
+
+It happened twice in our 162 units, and both times the arithmetic landed exactly on the solution. On grid 6, a box carries two complete cages covering eight of its cells with totals adding to 43. The ninth cell is not a guess or a deduction chain: it is 2, and that 2 sits inside a four-cell cage totalling 18 that pokes out of the box into the neighbouring column. On grid 2, the same pattern with totals summing to 38 pinned a 7.
+
+Real talk: two units out of 162 is not a lot, and that tells you something worth knowing. The 45 rule is the most powerful tool in killer sudoku and it almost never fires on a random layout, because the pattern requires cages built to respect unit boundaries. Published killer puzzles are hand-tailored for exactly that — which is why they crack open in ten minutes while a random layout of the same size sits there stubbornly. If you are writing your own killer puzzles, the tiling is the design; the sums are bookkeeping.
+
+## How to Solve Killer Sudoku: Order of Attack
+
+Work the small, sharp constraints first and let the classic grid absorb the fallout:
+
+- **Sweep the one and two-cell cages before anything else.** A two-cell total of 3, 4, 16, or 17 is a digit pair, not a range. Write both marks and move on — those cells are the only place the cage rule pays immediately.
+- **Recompute cage combinations the moment one cell fills.** A three-cell cage totalling 7 is `1+2+4` and nothing else. Fill one of its cells and the rest collapse; the same cage that looked wide open two minutes ago is now a two-digit decision.
+- **Hunt the 45 rule in every unit, every pass.** Scan a row and ask whether all but one of its cells sit in cages fully inside the row. When the answer is yes, subtract. When the answer is no, move on — do not force it.
+- **Count what a cage cannot contain.** A five-cell cage totalling 33 must hold `8+9` plus three low digits, so it cannot be all small. Feasibility cuts both ways: the minimum and maximum sums for a given cage size eliminate digits at both ends, and that is where the wide cages finally speak.
+- **Feed placements back into the classic grid.** Cage logic and classic logic are one loop. Every digit a cage pins removes candidates from a whole row, column, and box, so alternate: cage totals, then singles, then cage totals again.
+
+Real talk: killer sudoku rewards arithmetic over vision. If you can add six small numbers in your head without losing your place, the cages give you more than any scanning technique — and if you cannot, write the combination list next to each cage before you start. It is not cheating. It is the technique.
+
+## Try It Yourself
+
+Grab a board with cages and run the order above, or practice each habit on its own: the [hints tool on our homepage](/) walks a puzzle forward one move at a time and names the technique it used, and the [step-by-step sudoku guide](/guides/sudoku-step-by-step) shows the same logical ladder on a classic grid. When the 45 rule clicked for you here, the [sandwich sudoku guide](/guides/sandwich-sudoku) runs the same row-total arithmetic from the outside in — and if you want the opposite lesson, in cage-sum weakness, the [girandola sudoku guide](/guides/girandola-sudoku) measures a variant that barely moves the needle. Free unlimited 9x9 puzzles of any difficulty come out of the [maker](/maker), and the cage-counting habit scales straight onto [16x16 mega sudoku](/mega) when nine digits stop being enough.
