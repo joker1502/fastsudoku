@@ -1,0 +1,92 @@
+---
+title: "X Sudoku (Diagonal Sudoku): 4.3 Givens Gone in 6 Digs"
+description: "Six X sudoku grids dug twice over: both diagonals replaced 4.3 givens, only 1 in 100,000 random boards qualifies, and 1 in 7 placements is diagonal-only."
+date: "2026-10-15"
+tags: [x-sudoku, diagonal-sudoku, sudoku-variants]
+---
+
+X sudoku is ordinary sudoku with one addition: both long diagonals must also hold the digits 1 to 9 exactly once. It reads like a heavy constraint. It is not. We dug six X sudoku grids down to their absolute minimum with our own checker, once under classic rules and once with the diagonals switched on. Classic digging stopped at 22-25 givens. The same six solutions, with diagonals in force, stopped at 19-21. The diagonals stood in for **4.3 given digits per puzzle** - the second-smallest saving of the eight variants in this series. The geometry explains why, and the numbers below show exactly where the diagonals do pay.
+
+## X Sudoku Rules in One Paragraph
+
+Rows, columns, and 3x3 boxes work exactly like normal sudoku. Then:
+
+- Both **main diagonals** - top-left to bottom-right, and top-right to bottom-left - are additional units. Each one must contain 1 to 9 with no repeats.
+- The two diagonals cover **17 distinct cells**, not 18, because they share the dead centre of the grid.
+- The rule only forbids repeats *inside* a diagonal. Cells off the diagonals are untouched by it.
+- Nothing is printed on the board to mark the diagonals. There are no marks, no symbols, no extra regions - which is exactly why new players forget the rule and stare at a stalled grid for ten minutes.
+
+Real talk: call it "two extra units" and move on. Unlike a jigsaw region, the diagonals don't reshape the boxes. Unlike thermometers or arrows, they add nothing you can see. They are invisible constraints, and invisible constraints get skipped.
+
+## Only 1 Board in 100,000 Passes
+
+Before digging anything, we measured how often a random completed grid happens to satisfy the diagonal rule. Our checker filled blank boards with randomised most-constrained-first backtracking - the same strategy the site engine uses - and tested both diagonals:
+
+- 300,000 completed boards. Valid main diagonal: **783** (0.26%, roughly 1 in 383). Valid anti-diagonal: **882** (0.29%, about 1 in 340). Valid both: **3**.
+- That is a hit rate near **1 in 100,000**. An earlier 20,000-board run found 67 main-diagonal boards and zero double-valid ones, so the pooled sample is 320,000 boards and 3 X sudoku solutions.
+- The two checks behave almost independently. Multiply them and you expect about 1 in 130,000; we measured 1 in 100,000. Close enough that the practical lesson holds either way.
+
+What that means in practice: you cannot take a stock sudoku solution, draw two diagonals over it, and expect a valid X puzzle. Retrofitting fails at better than 99.999%. Every X sudoku has to be generated diagonal-first, and the six grids below all started from solution boards that passed the check.
+
+## 102 New Bans, and a Centre Cell with 32 Peers
+
+The 17 diagonal cells form 136 pairs with each other. Only 34 of those pairs were already constrained by a shared row, column, or box. The diagonals add **102 new "these two cells must differ" bans** - four times as many as the girandola pinwheel adds over a similar span.
+
+Per cell, the geometry is unusually tidy:
+
+| Cell group | Cells | New bans each | Total peers |
+|:-----------|------:|--------------:|------------:|
+| Diagonal cells (corners, edges, box corners) | 16 | 6 | 26 |
+| Centre cell | 1 | 12 | 32 |
+
+Every diagonal cell climbs from 20 classic peers to 26. The centre climbs to 32 because it sits on both diagonals at once, giving it 16 diagonal mates - and four of those, the corners of the middle box, were already its box neighbours.
+
+So 102 fresh bans, and a centre cell that touches more cells than anything else on the board. You would expect a big payoff. Here is the measurement that spoils the intuition: in a first candidate sweep from givens alone across the six grids, only **67 of 1,615 eliminations** - 4.1% - came from a diagonal that no row, column, or box would have covered anyway.
+
+The bans land between cells that share nothing else, most of them in different boxes, so they trim candidates in cells that were already wide open. And the effect tracks how you seed it: grid 4, with five given digits sitting on its diagonals, logged 21 diagonal eliminations. Grid 5, whose minimum puzzle carries zero givens on either diagonal, logged none. Same rule, different leverage.
+
+## Six Dug Grids: 23.8 Givens Down to 19.5
+
+Method, same as every post in this series. Take a solved X sudoku solution. Remove one digit at a time in random order, and keep the removal only when an exhaustive uniqueness proof says the puzzle still has exactly one solution. Run that walk twice per grid: once with classic constraints only, once with both diagonals in force.
+
+| Grid | Classic minimum | X sudoku minimum | Givens replaced | Given digits on diagonals |
+|:-----|----------------:|-----------------:|----------------:|--------------------------:|
+| 1 | 25 | 19 | 6 | 4 |
+| 2 | 22 | 19 | 3 | 2 |
+| 3 | 25 | 19 | 6 | 1 |
+| 4 | 24 | 21 | 3 | 5 |
+| 5 | 24 | 20 | 4 | 0 |
+| 6 | 23 | 19 | 4 | 4 |
+
+Classic digging bottomed out at 22-25 givens (mean 23.8). X sudoku digging bottomed out at 19-21 (mean **19.5**). The diagonals replaced **4.3 givens per grid**.
+
+Ranked against the rest of the series, that puts X sudoku near the bottom of the table: greater-than signs 23.7 givens saved, killer cages 20.0, sandwich sums 12.5, anti-knight ban 11, thermometers 7.8, X sudoku 4.3, girandola window 3.5.
+
+Look at the last column again. Grid 5's minimum X puzzle carries **no given digit at all on either diagonal**, and it is still uniquely solvable with 20 clues. The diagonal rule doesn't need to be seeded by printed digits on the diagonals. It works through everything else on the board - which is the honest description of how it constrains a puzzle, and why an empty diagonal is not a weak diagonal.
+
+## Where the Diagonals Earn Their Keep
+
+Minimum-clue puzzles need search to finish, and players don't see them. So we ran the dig a second time with a stricter condition: keep a removal only if the puzzle stays solvable by singles alone - naked singles and hidden singles, with the diagonals applied as units. That is roughly the level a published X sudoku ships at.
+
+Classic rules needed 24.8 givens to reach that standard (24, 24, 24, 25, 25, 26 across the six grids). With diagonals, 20.5 givens did the same job (19, 19, 20, 21, 21, 23). Same 4.3-clue gap, this time on puzzles you can actually finish with pencil logic.
+
+Then we instrumented the solving and asked which unit justified each placement. Across the six grids the solver made **152 hidden-single placements**. Of those, **21 - about one in seven - had no row, column, or box to justify them.** Only a diagonal did.
+
+Two of them are worth keeping:
+
+- On grid 3, cell r1c1 resolved to 3 while three candidates remained in the cell. Its row, column, and box each had at least two homes for a 3. The main diagonal had one.
+- On grid 6, the centre cell r5c5 resolved to 7 with four candidates still open, and again no row, column, or box could pin it. The diagonals could - and the centre is the single busiest cell on the board at 32 peers.
+
+Real talk: 21 placements out of 152 sounds like a rounding error, until you are the one staring at a stalled grid. When X sudoku stops moving, the diagonals are usually both the reason you are stuck and the way out.
+
+## How to Solve X Sudoku: Order of Attack
+
+- **Treat the two diagonals as two extra rows.** After every placement, scan them exactly the way you scan a row for a missing digit. At singles-solvable level, one in seven hidden singles in our run came from a diagonal, and every one of those is invisible to a player who only scans rows, columns, and boxes.
+- **Start at the centre.** r5c5 has 32 peers and belongs to both diagonals. A single placement anywhere along either diagonal can crack it, so check it before you start chasing pairs.
+- **Watch the middle-box corners.** r4c4, r4c6, r6c4, and r6c6 are the only diagonal cells that share a box with the centre. That is where diagonal logic and box logic collide first, and they resolve fast.
+- **Count the missing digits on each diagonal.** Each diagonal needs all nine. With seven filled, the two missing digits usually have candidate sets that force their order - the same arithmetic as a row, applied to a line you probably skipped.
+- **Don't expect the diagonals to trim candidates for you.** 4.1% of the initial eliminations in our six grids came from them. Save the diagonals for the moment singles stall, then use them the way you would use a pair: as the tie-breaker, not the engine.
+
+## Try It Yourself
+
+Load any of these grids into the [solving tool on our homepage](/) and it walks the puzzle forward one move at a time, naming the technique each step used - including the diagonal scans. The [girandola guide](/guides/girandola-sudoku) measures the variant that adds even less than the diagonals, and the [killer sudoku guide](/guides/killer-sudoku) shows what happens when an extra rule finally does heavy lifting at 20 givens saved. Want boards you can print and mark up? The [maker](/maker) generates 1, 2, or 4 per page at any difficulty with an optional answer key, and when nine digits stop being interesting, [16x16 mega sudoku](/mega) gives you sixteen - with no diagonals, so nothing to forget.
