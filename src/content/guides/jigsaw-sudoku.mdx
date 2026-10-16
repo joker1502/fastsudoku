@@ -1,0 +1,109 @@
+---
+title: "Jigsaw Sudoku: Irregular Regions Beat Boxes by 4.5 Givens"
+description: "Six jigsaw sudoku grids dug twice: irregular regions needed 4.5 fewer givens than 3x3 boxes, and only 1 in 11 random region shapes holds nine distinct digits."
+date: "2026-10-16"
+tags: [jigsaw-sudoku, sudoku-variants, irregular-sudoku]
+---
+
+Jigsaw sudoku replaces the nine 3x3 boxes with nine irregular regions, every one of them nine cells, every one of them a different shape. We wrote a region-aware solver, grew six layouts, and dug each board twice - once with boxes, once with the irregular regions. The irregular layouts came out **4.5 givens cheaper**: 25.0 givens down to 20.5. That is a real saving, and it is also the third-smallest of the eight dug-twice variants in this series, because jigsaw sudoku does not add a rule. It swaps one region set for another and brings nothing else to the table.
+
+## Jigsaw Sudoku Rules in One Paragraph
+
+Rows and columns behave normally. What changes is the region: instead of nine 3x3 boxes you get nine connected shapes of nine cells each.
+
+- Each region must hold the digits 1 to 9 exactly once, same rule as a box.
+- Every region is edge-connected. Two cells meeting only at a corner never share a region, so you can always walk from any cell of a region to any other cell through shared edges.
+- No region repeats another region's shape in our layouts, and no printed puzzle annotates them. The thick border is the only marking on the board - no sums, no arrows, no extra digits.
+- The rules text you get with most jigsaw books is four lines long. The difficulty is entirely in the region geometry.
+
+Real talk: the moment you stop scanning three rows at a time, your old habits break. In a box, a filled digit eliminates candidates across a 3x3 window you can see in one glance. A jigsaw region can wander across five rows and four columns, so "check the region" means tracing an outline with your finger. That single mechanical change is what makes jigsaw grids feel foreign, not the logic.
+
+## You Cannot Retrofit a Layout onto an Existing Puzzle
+
+The first question we tested was whether you can take a solved sudoku and draw jigsaw regions over it. Our solver filled 1,500 random classic solutions and threw 25 random region layouts at each one, checking all nine regions every time. That is 337,500 region draws.
+
+- **31,345 regions held nine distinct digits** - 9.29%, about 1 in 11.
+- The average random nonomino carried **7.41 distinct digits**. The most common outcome was seven distinct digits with two repeats, at 130,991 draws; eight distinct came in at 127,486.
+- Per layout, the average random solution cleared **0.836 of the nine regions**.
+- Of 37,500 layout checks, **zero cleared all nine regions**. Not one.
+
+So the arithmetic that kills the retrofit is not the 1-in-11 rate, which sounds survivable. It is that you need all nine regions to come out clean at once. Our measured sample could not produce a single one, and a region that fails takes the whole board with it.
+
+Practical consequence, and it drove everything below: jigsaw boards get built the other way round. Take a solved grid, then grow the regions around it, adding one cell at a time and refusing any cell whose digit the region already uses. Growing regions from a finished solution also happens to be cheaper computationally, which brings us to the next measurement.
+
+## A Blank Jigsaw Board Costs About 800 Times More Search
+
+Our most-constrained-first backtracker fills an empty classic 9x9 grid in a mean of **82 search nodes** across 200 runs. We then handed it twelve random nonomino layouts and asked for the same thing, with no clues on the board at all.
+
+- Mean cost across the twelve layouts: **68,395 nodes** - roughly 800 times the classic figure.
+- Spread: one layout finished in 95 nodes, another needed 153,110, another 120,818.
+- One layout burned **300,020 nodes across 40 randomised restarts** and still had not produced a solution when we stopped it. Twelve layouts, one practical failure.
+
+Read those two numbers together and the shape of the problem appears. A jigsaw layout is not a hard puzzle, it is a fragile region partition: pick a partition that fights itself and the search has nothing to hold on to. That is why the six boards in this post were built region-first from six random classic solutions, and why the layouts you see below all have fat, blocky regions rather than spaghetti.
+
+## Every Cell Has 20 Peers in Classic Sudoku. Here It Is 16 to 23
+
+A cell's peers are the cells it cannot share a digit with. In classic sudoku that set is fixed at exactly 20: 8 row neighbours, 8 column neighbours, and 4 box neighbours that are not already in the same row or column. There is no variation anywhere on the board.
+
+Swap the box for an irregular region and the count moves, because a region's cells overlap your row and column in unpredictable places. Across our six layouts:
+
+| Measure | Classic boxes | Jigsaw regions |
+|:--|:--|:--|
+| Peers per cell | exactly 20, all 81 cells | 16 to 23 |
+| Cells whose peer count is not 20 | 0 | 31 to 52 (mean 40 of 81) |
+| Region mates already in the same row or column | exactly 4 of 8 | 3.7 to 4.9 of 8 |
+| Distinct rows a region touches | exactly 3 | 2.8 to 4.0 (per-layout mean) |
+| Distinct columns a region touches | exactly 3 | 3.2 to 4.9 (per-layout mean) |
+
+Two things follow. Some jigsaw cells carry four fewer constraints than a classic cell, which means wider candidate lists and more guesswork at that spot. Others carry three more, and those are where jigsaw grids pay you back. It is a trade at cell level, not a uniform upgrade - and that is exactly what the digging numbers look like too.
+
+## Six Boards, Dug Twice: 25.0 Givens Down to 20.5
+
+Method, unchanged from every post in this series. Take a solution that is valid under both rule sets. Remove one digit at a time in random order and keep the removal only when an exhaustive uniqueness proof still finds exactly one solution. Run the whole walk twice per board: once with rows, columns, and 3x3 boxes; once with rows, columns, and the irregular regions.
+
+| Grid | Classic minimum | Jigsaw minimum | Givens saved | Region rows touched | Region columns touched |
+|:-----|----------------:|---------------:|-------------:|:--------------------|:----------------------|
+| 1 | 27 | 24 | 3 | 1 to 4 | 3 to 9 |
+| 2 | 25 | 20 | 5 | 2 to 5 | 3 to 5 |
+| 3 | 24 | 20 | 4 | 2 to 5 | 3 to 5 |
+| 4 | 24 | 20 | 4 | 3 to 6 | 2 to 4 |
+| 5 | 25 | 20 | 5 | 2 to 4 | 3 to 6 |
+| 6 | 25 | 19 | 6 | 2 to 4 | 3 to 7 |
+
+Classic digging stopped at 24 to 27 givens, mean 25.0. The same six solutions under irregular regions stopped at 19 to 24, mean **20.5**. That is an 18% reduction in given digits for a rule set that is exactly as large as the box rule set - 27 all-different units either way.
+
+Ranked against the rest of the series by givens saved: greater-than signs 23.7, killer cages 20.0, sandwich sums 12.5, anti-knight ban 11.0, thermometers 7.8, **jigsaw regions 4.5**, X sudoku diagonals 4.3, girandola windows 3.5. Two caveats matter here. Every other variant in that list bolts a new constraint onto a normal grid, which is why the top of the table is dominated by rules that forbid thousands of pairs. Jigsaw sudoku only reshapes the box, so 4.5 givens is the entire value of the shape itself.
+
+## Where the Regions Earn Their Givens
+
+We counted, for each minimum puzzle, how many candidate bans in a first sweep come from the region and nowhere else - bans that no row or column on the board would have produced.
+
+- Jigsaw minimum puzzles: **14.7% of all first-sweep bans were region-only** (38.5 bans per puzzle on average).
+- Classic minimum puzzles: **14.9% were box-only**. Effectively the same share.
+- Bans per given digit: **12.8 for jigsaw, 11.7 for classic**. The jigsaw boards hit harder per clue because they carry five fewer of them.
+
+Nearly identical shares from a shape that looks nothing like a box. That is the honest headline - the region is a region, and the box is already doing the same job. The savings come from the second-order effect: with 20.5 givens instead of 25.0, each remaining digit has to work harder, and a region touching four or five rows drags its deductions across rows your column scans were not going to reach anyway.
+
+One board shows what breaks the effect. Grid 1's layout contained a region that is an entire row, and another that reached across all nine columns. It dug out at 24 givens, the worst of the six - and it also had the lowest mean peer count of the set, 19.09, against 19.9 to 20.3 for the others, which all stopped at 19 or 20 givens. A region that degenerates into a straight line duplicates a unit you already have and hands the givens back. Keep your regions fat.
+
+## Solving a Jigsaw Grid: Trace the Shape, Not the Rows
+
+The solving techniques from classic sudoku all still apply - naked singles, hidden singles, pointing pairs - but the scan pattern has to change, and our minimum puzzles show where the region does unique work: in those six boards, **22 to 34 empty cells took a first-sweep elimination that only the region could deliver**, 29 cells on average.
+
+Three habits that come out of it:
+
+1. Pick a digit, not a cell. Choose the number you just placed and trace every cell of its region. Regions span 3 to 4 rows on average, so one placement questions cells in rows that a box never would.
+2. Ask what a region still needs, not just what a cell can hold. Eight filled cells in a region plus one gap is a naked single even when the cell has four candidates left from its row and column.
+3. Watch for the wide region. When a region covers cells in five different rows, a lone candidate inside it often forces a digit into a row where nothing else has moved for minutes.
+
+If you want to see the same four moves logged step by step on a classic grid before you take them to a jigsaw board, our [solving techniques guide](/guides/sudoku-logic) walks through singles, pairs, and pointing pairs with real move counts. The [X sudoku guide](/guides/x-sudoku) covers the other invisible-region variant and shows how little of the constraint work actually happens off the diagonals. And the [killer sudoku guide](/guides/killer-sudoku) measures what happens when regions come with sums attached instead of weird borders.
+
+## Try It
+
+Jigsaw boards are drawn by hand or by generators that grow regions around a finished solution - you now know why a random sketch of regions will not do. Our own generator produces classic grids of several sizes, which is the right place to practise the logic that carries over:
+
+- [Sudoku maker](/maker) generates, plays, and prints 1, 2, or 4 puzzles per page with an optional answer key, so you can shade in your own region borders and turn a classic board into a rough jigsaw by hand.
+- [16x16 mega sudoku](/mega) for anyone who finds the digit range, not the region shape, is what makes 9x9 too quick.
+- [4x4 and 6x6 kids sudoku](/kids) if you want the region concept introduced gently before irregular borders appear.
+
+Start with one practice board, redraw two of its boxes as irregular regions of nine connected cells, and solve whatever is left. If you can finish it, you have the one skill jigsaw sudoku actually requires.
