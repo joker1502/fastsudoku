@@ -1,0 +1,74 @@
+---
+title: "Windoku: The Sudoku Variant With Four Hidden Regions"
+description: "Windoku adds four 3x3 windows that straddle the boxes. Six boards dug twice needed 8.0 fewer givens, and only 1 in 70 classic solutions clears one window."
+date: "2026-11-10"
+tags: [windoku, sudoku-variants, windoku-sudoku]
+---
+
+Windoku is an ordinary 9×9 sudoku with four extra 3×3 regions: rows 2 to 4 by columns 2 to 4, rows 2 to 4 by columns 6 to 8, and the same pair again at the bottom. Each window must hold 1 to 9 exactly once, like a box. Nothing else changes - no sums, no arrows, no shading on a properly printed board, which is why people who open a windoku without reading the caption solve it as plain sudoku and then wonder why the grid refuses to finish.
+
+We wrote a window-aware solver and dug six boards twice, once with the classic rule set and once with the windows switched on. The windows were worth **8.0 givens**. Our classic digs bottomed out at 24.8 givens on those solutions; the same six came up at 16.8 under windoku rules, a 32% cut. That lands windoku between thermometers (7.8) and anti-knight (11.0) on the running list of variants we have measured the same way.
+
+## Where the Four Windows Sit
+
+Take the boxes off your mental map first. A window is the same size as a box, but offset one row and one column inward, so it lands on four boxes at once instead of one.
+
+In the standard layout the four windows cover **36 of the 81 cells** and never overlap each other. Every box contributes exactly four window cells, and here is where box thinking starts to fail, because those four cells arrive in three different shapes:
+
+- **Corner boxes** contribute all four cells as a 2×2 block at the corner facing the grid centre - box 1, top left, hands over r2c2, r2c3, r3c2 and r3c3.
+- **Edge boxes** split theirs between two windows, two cells each, on opposite sides. Box 2, top middle, gives r2c4 and r3c4 to one window, r2c6 and r3c6 to the other.
+- **The centre box** is the odd one: its four corners, r4c4, r4c6, r6c4 and r6c6, each belong to a different window.
+
+Peer counts follow from that geometry. A classic cell has 20 peers; in windoku **45 cells keep their 20** while the 36 window cells gain. Sixteen of them move to 23 and twenty move to 24. The biggest gains go to cells a window reaches without sharing a row, column, or box with them: for the top-left window those are r2c4, r3c4, r4c2, r4c3 and r4c4, five cells you would not have connected to that region by eye.
+
+Real talk: my first half hour with windoku was wasted scanning windows like boxes. A window aligns with nothing. You cannot glance at a threesome and spot a repeat, and each of the four shapes is a cross-shaped intersection of four boxes. What fixed it for me was to treat the window list as a fourth pass: after every placement, walk the four cells of that one window, then stop trying to hold the boxes and windows in the same mental picture.
+
+## What the Windows Actually Buy You
+
+The 8.0 givens is the headline. It hides a detail that decides whether a windoku puzzle is honest.
+
+Every one of our six windoku minimums had **at least two solutions under classic sudoku rules**. Dug to 16 or 17 givens with the windows carrying the load, the boards are not solvable as normal sudoku at all. A windoku handed to you without a rule sheet is not a slightly harder sudoku; it is an unsolvable one, and any plain solver you paste it into will report multiple solutions. The solver is not broken. It is missing four units.
+
+We also measured the practical end of the range: dig until the grid finishes on naked and hidden singles alone, no pairs, no guessing. Classic stopped at 24.7 givens. Windoku dropped to **19.0**, so 5.7 fewer - a smaller saving than the 8.0 headline, because demanding an easy solve hands clues back.
+
+Then we took those six singles-solvable windoku puzzles and ran them again with the window rule deleted. All six stalled, frozen with **55 to 63 empty cells** still on the board. Decoration is not what the windows are.
+
+Where do the extra deductions come from? In a first candidate sweep over the six minimum puzzles, **108 of 1,547 bans were window-only** - 6.98%, ranging from 3.6% to 9.3% per board. During the singles solve of the easier set, **51 of 372 placements could not be justified by any row, column, or box** (29 naked singles, 22 hidden). Roughly one move in seven exists only if you are looking at a window.
+
+That ratio explains how the variant feels. No new logic gets learned. Old logic gets re-run on four extra units, and you keep forgetting to check them.
+
+## Why You Cannot Filter a Normal Sudoku Into a Windoku
+
+Windoku looks like the easiest variant to fake - same grid, four extra regions, no arithmetic - so I expected a fair share of ordinary solutions to be window-legal by luck.
+
+We generated **120,000 random classic solutions** and checked all four windows on each: 480,000 window checks in total.
+
+- A single window held nine distinct digits **1.42% of the time**, about **1 in 70**.
+- The mean was **6.90 distinct digits per window**. Seven distinct was the most common result at 47.7%, six at 26.2%, eight at 21.0%, and only 0.09% of windows dropped as low as four distinct digits. Nine distinct is rarer than eight by a factor of fifteen.
+- **7 boards out of 120,000 had three legal windows. Zero had all four.**
+
+Four windows at 1.42% each works out to roughly 1 in 25 million boards if the windows behaved independently, and 120,000 samples was never going to find one. The retrofit idea dies the same way it does for jigsaw sudoku: all four have to come up clean simultaneously, and the per-unit rate is already tiny.
+
+Generation cost is the other half. Filling an empty classic grid took a mean of **83.7 search nodes** across 20 boards. The same fill with window constraints took **10,659.9 nodes**, median 10,121, worst case 29,177 - about **127 times** the work, with zero restarts on all 20 boards. Cheap to run in code, hopeless to attempt by trial and error.
+
+## Solving Windoku Without New Techniques
+
+Every classic technique ports over untouched: naked singles, hidden singles, pointing pairs, box-line reduction. The word "box" becomes "unit", and you have thirteen units instead of nine. What changes is scan order.
+
+1. **Open on the corner boxes.** Their window cells sit as 2×2 blocks at the inner corner, so a digit placed at r3c3 kills three window mates and three box mates simultaneously. It is the cheapest intersection on the board.
+2. **Treat the centre box as a switchboard.** Its four corners belong to four different windows. Any placement at r4c4, r4c6, r6c4 or r6c6 moves a different region each time, so a stuck board deserves a look there before you start on the edges.
+3. **Resist the 45-sum shortcut.** Each window sums to 45, same as any nine-cell unit, and it is tempting. It did not help us once: in the six minimum puzzles the fullest window carried 5 givens while every other window carried 1 to 4, so every window had at least four holes. A sum over four unknowns yields pair constraints, not placements. Keep the trick for hand-made puzzles with dense windows.
+4. **Count window cells inside your box scans.** When checking whether a digit fits a box, four of those nine cells also answer to a window. Skipping that check is the most common slip, and it throws away naked singles you had already earned.
+
+If you want the machinery underneath these walks before trying windoku, the [solving techniques guide](/guides/sudoku-logic) defines singles and pointing pairs with real move counts, and the [killer sudoku guide](/guides/killer-sudoku) covers the variant most often confused with this one, where regions come with sums stapled on.
+
+## Try It
+
+Windoku boards are drawn by hand or grown region-first, and now you know why a random grid cannot be reused. Our generator handles the classic rule set at four sizes, which is where the logic under windoku gets sharp:
+
+- [Sudoku maker](/maker) generates, plays inline, and prints 1, 2, or 4 puzzles per page with an optional answer key. Print a classic board, pencil the four window outlines with a ruler, and you have a windoku in about a minute - the geometry is exact and every cell is accounted for.
+- [Mega sudoku 16×16](/mega) if four extra regions sound like a small problem and you would rather the digit range did the damage.
+- [4×4 and 6×6 kids sudoku](/kids) to introduce the idea of a second region set to someone who has not memorised the boxes yet.
+- Our [hints tool](/) steps a stuck grid one move at a time, which is the honest way to find out whether you missed a window or a box.
+
+Start with one printed board: cram four window outlines onto a classic puzzle, solve it, and notice how often your eye skips the corner boxes. That skip is the whole windoku learning curve, and it takes about three boards to lose.
