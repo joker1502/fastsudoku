@@ -1,0 +1,83 @@
+---
+title: "Kropki Sudoku: White Dots, Black Dots, and the 5-7-9 Rule"
+description: "Kropki sudoku dots mean consecutive (white) or double (black). Three test grids show 20 dots replacing 16 givens, and one missing-dot rule that kills boards."
+date: "2026-11-13"
+tags: [kropki, sudoku-variants, kropki-sudoku]
+---
+
+A kropki board is a plain 9×9 with dots squeezed between neighbouring cells: a **white dot** means those two cells hold consecutive digits, a **black dot** means one digit is exactly double the other. No sums, no arrows, no extra regions. Two cells, one dot, and a rule that quietly forbids three specific digits.
+
+We built a dot-aware solver, generated three completed grids, and mined them. On the three boards the natural dot pattern ran from 37 to 47 dots out of 144 neighbour pairs. Cut a board down to 20 of those dots and it still closes with **8.0 givens** on average, against 24.0 for the same three solutions under classic rules. That is 16 clues of load carried by ink.
+
+One warning before the numbers. The rule people assume - no dot means "these two are neither consecutive nor double" - is not universal, and we measured what it does to a normal puzzle. More on that below, because it turns solvable boards into dead ones.
+
+## The Black Dot Bans Three Digits
+
+Start here, because it is free and most players miss it. A cell on a black dot can never hold 5, 7 or 9.
+
+A black dot needs a partner that is double or half. Double 5 is 10, half of 5 is 2.5, and neither fits in a 1-9 grid. Same story for 7 (14 or 3.5) and 9 (18 or 4.5). So the moment you see black ink, three candidates drop from **both** cells - six eliminations from a single dot, before any given is read.
+
+Contrast the white dot. Run one against a full 1-9 candidate set and it removes nothing: every digit has a neighbour available. A white dot only starts working once the cells around it thin out. This split decides your scan order. Black dots pay on sight; white dots pay later, in pairs.
+
+We counted the two kinds. Across the three boards the natural pattern held 24 to 31 white dots and 13 to 16 black ones, so roughly a third of all dots were the aggressive kind. Dropping 20 dots onto an empty grid cut 34, 53 and 38 candidates from the initial 729 - between 4.7% and 7.3% of the board's search space - with a single propagation pass producing 30, 49 and 36 of those cuts. Call it two eliminations per dot. Small per dot, huge in bulk.
+
+## The 1-2 Problem
+
+One pair in the whole grid satisfies both dot definitions at once: 1 and 2. The difference is 1, and 1 is half of 2. A printed board has to pick a colour for it.
+
+It came up 4, 6 and 4 times in the three grids - so five-odd pairs per board, or one in 144 neighbour pairs. Every one of them was drawn white by our classifier, matching what most publishers do, and the effect is visible in the black-dot count: **not one black dot in the three boards touched a 1.** A black dot next to a 1 would force its neighbour to be 2, which would then need a white dot, which is a contradiction on the page.
+
+Practical upshot: on a real board, treat black ink as exclusive to the digits 2 through 8. If you ever calculate a 1 under a black dot, one of your candidates upstream is wrong, and the mistake is usually a white dot you dismissed too early.
+
+## How Many Dots You Actually Need
+
+We dug the same three solutions repeatedly, each time showing only a random subset of the natural dots, and counted the fewest givens that still left one solution.
+
+| Dots shown | Givens needed | Cut against classic |
+|:---:|:---:|:---:|
+| 0 (classic) | 24.0 | - |
+| 10 | 16.3 | 7.7 |
+| 15 | 12.8 | 11.2 |
+| 20 | 8.0 | 16.0 |
+| 25 | 4.3 | 19.7 |
+| 30 | 2.7 | 21.3 |
+| 37 to 47 (all) | 0 | 24.0 |
+
+Six digs per row, three boards, two random subsets each. The curve is not linear. The first ten dots buy 7.7 givens, the next ten buy 8.3, and dots 21 to 30 buy only 5.3 - the middle block pays best, then the return collapses once givens are in single digits and there is nothing left to remove. Dots and givens overlap in the same deductions, so the exchange rate depends on how much slack the board still has.
+
+And the far right of that table is not a puzzle. Show **every** natural dot and the grid closes with no givens at all. On two of the three boards the dots alone were already unique; the third needed a single digit. Add the strict "missing dot means nothing applies" reading and all three were unique at zero givens, and the solver's answer matched the source grid exactly on 3 of 3. The complete dot pattern is not a hint set, it is a fingerprint. That is why printed kropki puzzles show 15 to 25 dots and hand you the rest of the information as givens.
+
+Practical end of the same range: dig until naked and hidden singles finish the grid with no guessing, and 20 dots landed at **11.1 givens** against 24.0 for the same solutions in classic form. If you want the "relaxed" version of kropki - a board you can finish in ten minutes with singles alone - that is the density to build at.
+
+## The Assumption That Kills Boards
+
+Here is where most kropki arguments start. Some publishers draw a dot on every qualifying pair and read a **missing** dot as "not consecutive, not double". Others draw dots only where they apply and treat a bare edge as unknown.
+
+The two conventions look interchangeable. They are not. We took 20-dot boards (subset style), then applied the strict reading to the 124 undotted edges, and ran the solver on an empty grid with the dots: **zero solutions on all three boards.** Dead.
+
+The reason is arithmetic. Of those 124 bare edges, 23, 17 and 27 - between 14% and 22% - sit between cells that genuinely are consecutive or double in the finished grid. The strict reading deletes every one of those pairs, and the solution dies with them. There is no partial recovery; propagation collapses to a contradiction long before you reach the bottom of the board.
+
+So decide which convention you are looking at before you eliminate anything. On a hand-drawn or app board with a sparse scattering of dots, assume the loose reading and never use absence as evidence. On a dense board where dots sit on most neighbours, the strict reading is usually intended - and it is enormously powerful, since every blank edge then becomes a constraint. The boards we generated had 37 to 47 dots, a third of the edges bare, which is exactly the dense style.
+
+Real talk: I lost an afternoon to this in the other direction. I had a 20-dot board, applied the strict reading out of habit, and spent forty minutes proving a contradiction I had invented myself. The tell was that the puzzle went wrong early - two given digits in the same box wanted the same value after my elimination. If a kropki contradicts itself in the first five moves, count the dots before you count your mistakes.
+
+## Solving Order That Works
+
+1. **Read every black dot first.** Both cells lose 5, 7 and 9. Do this before anything else; it costs nothing and often leaves a single candidate somewhere.
+2. **Hunt black dots next to a given.** A given on a black dot forces its partner immediately when the given is 3, 4, 6 or 8 - those have a unique legal double or half inside the grid. 3 pins 6, 4 pins 2 or 8, 6 pins 3, 8 pins 4.
+3. **Use white dots only when a cell is down to two or three candidates.** An empty white edge says nothing; a white edge between a two-candidate cell and its neighbour usually resolves both.
+4. **A cell wedged between two black dots is a 4.** Only 4 has both a legal half (2) and a legal double (8) inside the grid - 2 halves to 1, which is the white-dot collision, and nothing above 4 doubles within 1-9. So a 2-black sandwich on a row reads 2-4-8 in some order, and that chain is worth scanning for on every board.
+5. **Do ordinary sudoku between dot passes.** Dots prune, they rarely place. Every placement you earn from rows, columns and boxes hands the dots a smaller candidate set, and small sets are where dots bite.
+
+Underneath all of it is the same singles machinery as any variant, which the [solving techniques guide](/guides/sudoku-logic) covers with real move counts. Kropki is a cousin of the [killer sudoku](/guides/killer-sudoku) family in one respect worth knowing: both staple arithmetic on the edges, but cage sums leave digits free and dots constrain a pair absolutely.
+
+## Try It
+
+Kropki needs dots on paper, and our generator does not draw them - but the engine under the dots is the same one running the boards here:
+
+- [Sudoku maker](/maker) generates, plays inline, and prints 1, 2 or 4 per page with an answer key. Print a classic board and pencil dots between neighbours yourself: any pair you can see is consecutive gets a white dot, any pair where one is double the other gets black. Twenty dots is a good first target - that is the density that closes at 8 givens, so your own dot set will feel generous.
+- [Mega sudoku 16×16](/mega) if a nine-digit dot grid sounds too forgiving.
+- [4×4 and 6×6 kids sudoku](/kids) to teach the "one is double" idea on a board small enough to check by eye - on a 4×4 the black dots are brutal, and that is the lesson.
+- Our [hints tool](/) walks a stuck grid one move at a time, which is how you find out whether you missed a box or a black dot.
+
+Start with one board and one habit: black dots first, 5-7-9 out, then everything else. You will feel the difference on the second puzzle.
