@@ -1,0 +1,130 @@
+---
+title: "Little Killer Sudoku: Diagonal Sums, Tested on 600 Boards"
+description: "Little killer sudoku arrows give the sum of a whole diagonal. Tested on real boards: 30 arrows cut 24.3 givens to 2, and the main-diagonal 45 rule fails."
+date: "2026-11-14"
+tags: [little-killer, sudoku-variants, diagonal-sums]
+---
+
+A little killer sudoku clue is one number sitting outside the grid with an arrow, and it gives the sum of every cell on the diagonal that arrow points along. No cage outlines, no extra regions, no dashes. The digits on that line can repeat, which is where most written explainers go quiet.
+
+We built a diagonal-aware solver, filled 600 boards with it, and pulled the arrows apart one by one. The short version: a single arrow is close to useless on an empty grid, thirty of them are close to a solved puzzle, and the popular claim that the long diagonal always sums to 45 is wrong roughly 94 times out of 100.
+
+## What a Little Killer Clue Actually Tells You
+
+Two families of lines cross a 9×9 grid diagonally: the ones running parallel to the main diagonal, and the ones running parallel to the anti-diagonal. Each family holds 17 lines, with lengths stepping 1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1.
+
+The four length-1 lines in the corners are single cells, so publishers never print an arrow on them. That leaves **30 lines a setter can clue**: four each of lengths 2 through 8, plus the two length-9 lines.
+
+Now the rule people get wrong. A diagonal is not a unit. Two cells on the same line always sit in different rows and different columns, so nothing forces them to differ, and the sum is a sum of a multiset rather than a set. On a real board duplicates do show up. We counted how often across 2,400 sampled lines at each length:
+
+| Line length | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Lines containing a repeated digit | 0% | 0% | 61.3% | 73.9% | 76.4% | 97.3% | 99.3% | 99.8% |
+
+The two zeros are the interesting part, and they are not an accident of sampling. Every 2-cell and every 3-cell diagonal in a 9×9 grid lies entirely inside a single 3×3 box (r1c2 with r2c1, r1c8 with r2c9, r8c1 with r9c2, r8c9 with r9c8, and the four 3-cell versions one step in). Inside a box the digits must differ, so those eight lines behave exactly like killer cages. From length 4 up a line crosses box boundaries and repetition becomes legal.
+
+## Eight Arrows That Are Secret Cages
+
+Take the four 2-cell lines. Because duplicates cannot happen there, they are plain 2-cell killer cages, and four of their fifteen possible sums give you the pair outright:
+
+- sum 3 means 1 and 2
+- sum 4 means 1 and 3
+- sum 16 means 7 and 9
+- sum 17 means 8 and 9
+
+If you have read our [killer sudoku guide](/guides/killer-sudoku), this is the same arithmetic, transplanted to four fixed positions. Four shapes, and a publisher who wants a gentle opening will use them first, because they need no note-taking.
+
+Length 3 in a corner box goes further than most solvers expect. Sum 6 pins {1,2,3}, sum 7 pins {1,2,4}, sum 23 pins {6,8,9}, sum 24 pins {7,8,9}. Four of its twenty-five sums are free; the rest need the surrounding grid.
+
+## The "Main Diagonal Is 45" Myth
+
+Half the tutorials online state that a 9-cell diagonal sums to 45. Some use it as a shortcut, some build a whole solving method on it.
+
+We measured 1,200 nine-cell lines. The mean came out at 44.95, which is why the myth survives casual testing, but only **67 of them, 5.58%, actually summed to 45**. The observed range ran from 24 to 63.
+
+The reasoning error is simple once you see it. A 9-cell diagonal is a staircase: three cells in the top-left box, three in the middle, three in the bottom-right. Nothing makes it a permutation of 1 to 9. Requiring it to be one is a separate variant, [diagonal sudoku](/guides/x-sudoku), which adds that as an extra rule. Little killer adds no rule, it only reads digits that are already there. Treat the 45 as a gift when you notice it, never as a premise, and if a solver tells you the main diagonal must be 45, the solver is wrong before the grid is half full.
+
+Because repeats are allowed, a length-9 arrow is the weakest clue on the board, not the strongest. Its sum can be built from **333 different digit combinations on average**, and at the peak value (45, naturally) there are 910 ways to make it.
+
+## One Sum, Dozens of Ways to Make It
+
+That multiplicity is the whole personality of the variant, so here it is as a table. Counted over every multiset of the given length that fits digits 1 to 9:
+
+| Line length | Possible sums | Sums that pin the digits | Average combinations per sum | Worst sum | Ways at worst |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 2 | 17 | 4 | 2.6 | 10 | 5 |
+| 3 | 25 | 4 | 6.6 | 15 | 13 |
+| 4 | 33 | 4 | 15.0 | 20 | 33 |
+| 5 | 41 | 4 | 31.4 | 25 | 73 |
+| 6 | 49 | 4 | 61.3 | 30 | 151 |
+| 7 | 57 | 4 | 112.9 | 35 | 289 |
+| 8 | 65 | 4 | 198.0 | 40 | 526 |
+| 9 | 73 | 4 | 333.0 | 45 | 910 |
+
+Notice that the fourth column never moves. However long the line, **only the four extreme sums tell you the digits immediately** — the minimum, the minimum plus one, the maximum minus one, and the maximum. Everything in between is a well of combinations, and a length-8 arrow at 40 hands you 526 candidate arrangements. Arrows are not little cages past length 4; they are equations, and equations need evidence.
+
+## Where the Arrows Start Working
+
+I expected the sums to bite immediately. They do not. One lone arrow on an empty grid removes the following number of candidates, averaged over 80 clues of each length:
+
+| Line length | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Candidates removed | 5.70 | 1.76 | 1.50 | 0.38 | 0 | 0 | 0 | 0 |
+
+Not one cell was pinned to a single digit by a single arrow, at any length. All 30 arrows together cut just 36 candidates from 729 on an empty grid, about 5%.
+
+Then we watched the same 30 arrows against grids that already had some given digits, propagating each grid to a fixed point with classic rules and again with the arrows added. Each row is 40 boards:
+
+| Given digits | Extra candidates the arrows remove | Extra cells they pin |
+|:---:|:---:|:---:|
+| 0 | 36.0 | 0 |
+| 10 | 97.1 | 5.0 |
+| 20 | 230.4 | 59.2 |
+| 30 | 65.8 | 32.8 |
+| 40 | 7.6 | 6.4 |
+
+That curve is the thing to remember. Diagonal sums are dead weight at the start and dead weight at the end, and they peak hard in the middle, around 20 given digits, where they pin 59 extra cells on average. If you open a little killer board and the arrows look useless, you are reading them too early. Fill a row or two first, then re-scan the lines; the same numbers that did nothing at move five will break the board at move twenty.
+
+## Which Arrows Earn Their Ink
+
+Arrows cost nothing to print, so setters use all of them. We tested whether they should. Same solutions, three separate digs, each clue subset used on its own:
+
+| Clue set | Clues | Minimum givens (board 1 / board 2) |
+|:---|:---:|:---:|
+| Short lines, length 2 to 4 | 16 | 8 / 8 |
+| Middle lines, length 5 to 6 | 8 | 12 / 14 |
+| Long lines, length 7 to 8 | 10 | 11 / 15 |
+
+Sixteen short arrows did the job of ten long ones and beat eight middle ones outright. Per clue, the short lines are worth roughly three times a long line, which matches the combination counts above: a length-4 sum has 15 arrangements, a length-8 sum has 198.
+
+## How Many Givens You Actually Need
+
+Same three solutions, dug twice with a greedy single-pass hole digger: once under classic rules, once with all 30 diagonal sums in place and no other help.
+
+| Board | Classic givens | With 30 diagonal arrows |
+|:---:|:---:|:---:|
+| 1 | 25 | 3 |
+| 2 | 25 | 2 |
+| 3 | 23 | 1 |
+
+Mean 24.3 against about 2. Twenty-two clues of work carried by 30 printed numbers.
+
+Two of those boards then crossed a line I did not expect. With **zero given digits** and only the 30 sums, the search still produced exactly one completed grid, and it matched the source solution cell for cell. The proof took 13,663 search nodes on board 1; on board 3 the run hit our node cap before finishing, so that one stays open. Treat the zero-given result as measured, not as a guarantee — it depends on the arrangement of digits, and plenty of boards will need a handful of givens.
+
+One more number, because it separates this variant from the geometric ones. Our harness filled 600 boards in 47.1 nodes on average, median 47, worst 53. Little killer costs nothing extra to generate, since the arrows only read a solution rather than constrain it. Compare the region-based variants in this series: window sudoku took 127 times the classic search to grow a board, and jigsaw took about 800.
+
+## A Scan Order That Works
+
+Four habits carry most of a little killer solve.
+
+Read short lines first. Two-cell and three-cell arrows give you digit sets without a single note: sum 17 on a corner pair is 8 and 9, full stop.
+
+Turn the sum into per-cell limits. With k cells still empty on a line, no cell can be larger than the sum minus the smallest k-1 + ... in practice: subtract one per empty cell and nine per cell you have already placed, and the remainder is your ceiling. Do it mechanically, it takes ten seconds per line.
+
+Watch the last cell of a line. When the other cells are filled, the arrow simply hands you the missing digit. This is where arrows pay for themselves, and it is why the middle game opens up so sharply.
+
+Use box-restricted pairs. The eight lines that fit inside one box obey cage rules, so a repeat there is a contradiction, not a coincidence. Spotting duplicates on those lines is the fastest error check available.
+
+What you should not do is treat the long arrows as strong clues. A length-8 line at 40 leaves 526 arrangements, so using it before the grid is dense enough is arithmetic on sand.
+
+If you want boards to try this on, our [maker](/maker) prints classic 9×9 grids in batches with answer keys, the [mega page](/mega) has a 16×16 board where the same sum logic applies with far larger ranges, and the rest of our technique writing lives in the [guides index](/guides).
