@@ -1,0 +1,92 @@
+---
+title: "Non-Consecutive Sudoku: Every Neighbour Pair Is Forbidden the Next Digit"
+description: "Non-consecutive sudoku bans ±1 between orthogonal neighbours. Six boards dug to 6-7 givens against 24.5 classic, and no 4x4 grid can satisfy the rule."
+date: "2026-11-19"
+tags: [non-consecutive, sudoku-variants, sudoku-rules]
+---
+
+A non-consecutive sudoku deletes the two digits either side of every filled neighbour. There are no bars, dots, or arrows to read: the ban is already on the board, covering all 144 orthogonal cell pairs. On six solved grids the rule flagged an average of **4.835 forbidden digits per cell** before any given was touched, and when we dug those same six boards to local minimality they closed at **6.75 givens** against **24.5** under classic rules. That is 17.75 fewer clues, or 72% less information.
+
+The numbers below come from a standalone bitmask solver we ran in `/tmp`, not from a published puzzle book. Every figure is reproducible from the six seeds used.
+
+## The Rule and the Pair It Gets Confused With
+
+Non-consecutive sudoku uses the normal 9×9 grid, boxes, rows, and columns. Add one line: any two cells sharing an edge must not hold digits that differ by exactly one. So 4 next to 5 is illegal, and so is 4 next to 3. The same 4 next to 6 is fine, and 4 next to 7 is fine. Diagonal neighbours are not constrained at all.
+
+This is not the inverse of [consecutive sudoku](/guides/consecutive-sudoku). That variant prints a bar between some pairs and treats the absence of a bar as a separate "must not be consecutive" clue. Non-consecutive sudoku prints nothing and constrains every edge. The whole grid is the clue.
+
+The arithmetic is lopsided at the ends. A 1 forbids only 2. A 9 forbids only 8. Every digit from 2 to 8 forbids two digits, one below and one above. So the middle of the board is where the rule bites hardest, which is the opposite of how most players scan.
+
+## How Many Candidates Each Cell Loses
+
+We generated six complete solutions that satisfy the rule, then measured every cell. For each cell we took its orthogonal neighbours' digits, added `d - 1` and `d + 1` for each, dropped anything outside 1-9, and counted the distinct results. Across 486 cells the mean was **4.835 forbidden digits**, with a range of 2 to 8.
+
+The position split is the useful part:
+
+| Cell type | Cells sampled | Average digits banned | Theoretical maximum |
+|:---|:---:|:---:|:---:|
+| Corner | 24 | 3.250 | 4 |
+| Edge (non-corner) | 168 | 4.411 | 6 |
+| Centre (not on edge) | 294 | 5.207 | 8 |
+
+A corner touches two neighbours, an edge cell touches three, and a centre cell touches four. The averages sit just under those ceilings because neighbour values collide: a cell with neighbours 4 and 6 has 5 banned twice but counted once, and a neighbour holding 1 or 9 contributes only one ban instead of two. The ceiling is real but rarely reached in full.
+
+There is a second reason the effective loss is smaller than 4.835. An orthogonal neighbour shares either a row or a column with the cell, so its own digit is already excluded by classic rules. Only the `±1` values are genuinely new. When we counted candidates on partially filled grids, the extra cut was much smaller:
+
+| Blank cells | Classic candidates per empty cell | Non-consecutive candidates | Extra loss per cell | Empty cells that lose anything |
+|:---:|:---:|:---:|:---:|:---:|
+| 30 | 1.717 | 1.339 | 0.378 | 33.3% |
+| 45 | 2.778 | 2.144 | 0.633 | 51.5% |
+| 60 | 4.664 | 3.914 | 0.750 | 52.2% |
+
+Read the direction carefully. The rule removes more candidates on a **sparse** board, not a dense one. With 30 blanks the row and column peers already supplied most of the `±1` bans. With 60 blanks there are fewer filled peers to do that work, so the non-consecutive rule has more to say. On a nearly empty puzzle the rule is close to a second full set of peers; on a nearly full one it is a rounding error.
+
+The practical consequence: the earlier you apply it, the more it pays. Late in a solve, most of its work is already done by rows and columns.
+
+## Digging Six Boards: 24.5 Clues Down to 6.75
+
+We built a constraint solver that treats the rule as a first-class peer relation, not a post-check. It propagates three things on every placement: remove the digit from row, column, and box peers; remove `d - 1` and `d + 1` from orthogonal neighbours. Uniqueness was proved by counting solutions up to two, using bitmask candidates and a most-constrained-first search.
+
+For each of six non-consecutive-valid solutions we ran two independent digging orders, giving 12 local minima. A cell was removed only if the remaining grid still had exactly one solution. The final run completed every proof without hitting its node budget, so these are exact local minima rather than truncated searches.
+
+| Board | Classic clues (two digs) | Non-consecutive clues (two digs) |
+|:---:|:---:|:---:|
+| 1 | 25, 24 | 7, 6 |
+| 2 | 24, 26 | 7, 7 |
+| 3 | 24, 24 | 7, 7 |
+| 4 | 26, 25 | 7, 7 |
+| 5 | 23, 25 | 6, 7 |
+| 6 | 24, 24 | 6, 6 |
+
+Classic digging landed between 23 and 26 clues, mean 24.5. Non-consecutive digging landed between 6 and 7, mean 6.75. The rule saved **17.75 clues per board**, and it shrank the spread: classic results varied by three clues, non-consecutive results by one.
+
+Six or seven givens is far below the 17-clue record for classic 9×9. That record is a global minimum; ours are local minima, meaning no single remaining clue could be deleted without breaking uniqueness. A different digging order might shave another clue, but the scale is clear. Under this rule the givens are almost decorative — the adjacency constraint is doing the solving.
+
+That also changes how a puzzle feels. With 24 clues you start by reading numbers. With six or seven, you start by mapping where each digit can possibly live in each row, and the grid fills in long chains once the first placement propagates. The technique set shifts from hidden singles to contradiction chains and short backtracking, because the adjacency web is the only thing holding the puzzle together.
+
+## A Zero-Given Board Does Not Close — But 4×4 Has No Board At All
+
+We fed the solver an empty 9×9 and asked for solutions. It found **12,260** before a 50-million-node cap stopped it, so the empty grid is nowhere near unique. Non-consecutive is strong, but not strong enough to replace givens entirely on 9×9.
+
+Smaller grids behave very differently:
+
+- Empty 6×6, counted exhaustively: **48 solutions**. Still not unique, but small enough that a handful of givens can finish the job.
+- Empty 4×4, counted exhaustively: **0 solutions**. There is no complete 4×4 grid in which every orthogonal neighbour pair differs by more than one.
+
+The 4×4 result is not a solver artifact. We separately enumerated all **288** classic 4×4 solutions by brute force and re-checked each adjacency; zero passed. With only four digits, each digit has two or three consecutive partners out of four, and every one of those 288 layouts contains at least one forbidden orthogonal pair. If you were hoping to bolt non-consecutive onto a kids' 4×4 board, the variant does not exist at that size. A 6×6 board does exist, and 48 empty-grid solutions leaves room for a real puzzle.
+
+The absence of a zero-given 9×9 is the useful takeaway for setting. You cannot publish an empty grid and call it a puzzle, but you can publish a very sparse one. The gap between 6.75 local-minimum clues and a unique empty grid is the room the rule leaves you.
+
+## Where to Scan First
+
+Three habits follow directly from the measurements.
+
+Start with interior cells. They carry four neighbours and averaged 5.207 banned digits, the highest of the three position classes. A placement there touches one row, one column, one box, and four orthogonal neighbours, so its bans spread along both axes.
+
+Treat a 1 or 9 in a corner as a weak clue, not a strong one. A corner holds at most 4 bans and averaged 3.25, and if the corner value is 1 or 9 it bans only one digit per neighbour. The corners look informative because they are visually isolated; numerically they are the quietest cells on the board.
+
+Apply adjacency bans during candidate entry, not after. On the 30-blank boards the rule cut candidates for only a third of empty cells, but on the 60-blank boards it cut more than half. The sparser the position, the more often a `±1` ban is the only thing standing between you and a wrong candidate.
+
+If you want a larger classic grid for comparison, the [16×16 mega sudoku](/mega) is the place to feel how much work rows and columns do without the adjacency rule. And if arithmetic cages are more your thing, our [killer sudoku guide](/guides/killer-sudoku) covers sums that constrain cells without ever touching their neighbours.
+
+The next time a non-consecutive puzzle hands you six givens, do not assume it is broken. It is doing exactly what the rule allows: almost all of the information is in the edges, and almost none of it is printed.
