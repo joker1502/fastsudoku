@@ -1,0 +1,99 @@
+---
+title: "Anti-King Sudoku: 8 Neighbours, 56 New Bans, and 4.8 Fewer Clues"
+description: "We built an anti-king solver and dug six grids: 19.2 givens against 24.0 classic, and only 56 of 272 king adjacencies add a ban beyond normal peers."
+date: "2026-11-20"
+tags: [anti-king-sudoku, sudoku-variants, sudoku-rules]
+---
+
+Anti-king sudoku is usually described as a peer-doubling rule. On a 9×9 board it is not. The eight cells around a square look like eight fresh constraints, but 416 of the 544 directed king adjacencies are already covered by the row, column, or box. Only 56 unordered pairs, 112 directed bans, add anything new, and every one of them is a diagonal move that crosses a box border. The four corner cells gain no new ban at all.
+
+We wrote a 9×9 solver with the king ban switched on, generated six complete grids that satisfy it, and dug each one twice: once with classic uniqueness, once with anti-king uniqueness. Classic digging stopped at 24.0 givens on average, anti-king at 19.2. That is a real saving of 4.8 clues per puzzle, but it is less than half the 11-clue saving we measured for the [anti-knight variant](/guides/anti-knight-sudoku), even though a king has more neighbours than a knight. Geometry explains the gap, and it changes how you should scan the board.
+
+## The Rule and the Eight-Cell Bubble
+
+Anti-king sudoku keeps rows, columns, and 3×3 boxes exactly as they are. One extra rule sits on top: two cells that touch like a chess king, horizontally, vertically, or diagonally, cannot hold the same digit.
+
+A king move is any step of one square in any direction, so the bubble around a cell has eight positions. Near an edge some of those positions fall off the board:
+
+- Corner cells have 3 king-neighbours.
+- Edge cells that are not corners have 5.
+- The 49 interior cells have all 8.
+
+That much is plain counting. The useful question is how many of those neighbours are new information. A classic sudoku cell already has 20 peers: eight in its row, eight in its column, and four more in its box. Overlap the two sets and the anti-king rule looks much smaller than its name.
+
+## Only 56 Bans Are Actually New
+
+Averaged over the whole board:
+
+| Cell type | Cells | King-neighbours | Already classic peers | New bans |
+|:---|:---:|:---:|:---:|:---:|
+| Corner | 4 | 3.00 | 3.00 | 0.00 |
+| Edge, non-corner | 28 | 5.00 | 4.43 | 0.57 |
+| Interior | 49 | 8.00 | 6.04 | 1.96 |
+
+Across the board there are 272 unordered king adjacencies, or 544 directed ones. Just 56 unordered pairs, 20.59% of the total, are not already a row, column, or box peer. The other 216 pairs are bans you were enforcing anyway.
+
+The reason is the shape of a 3×3 box. A horizontal or vertical king step always stays in the same row or column, so it is already a classic peer. A diagonal step stays inside the same box unless it crosses a box border. The only genuinely new bans are therefore the diagonal steps that jump from one box to another. Every one of our 56 extra pairs fits that description, and none of the 112 directed extra bans is orthogonal.
+
+The distribution is uneven. Twenty-five cells gain no new ban whatsoever, including all four corners. Sixteen cells gain one, twenty-four gain two, and sixteen gain three. The maximum is three, which is a long way from the eight the phrase "eight-cell bubble" suggests.
+
+That also gives you a free scanning rule. A king check inside a box, or straight along a row or column, tells you nothing you did not already know. The only checks worth making are the diagonal neighbours across box boundaries. Four of them radiate from many cells near the middle of a box edge, and they are the ones that can delete a candidate.
+
+## An Empty Board Loses Zero Candidates
+
+The phrase "removes half your candidates" does not survive a count. On an empty 9×9 grid there are 729 candidates, nine per cell, and the anti-king rule removes exactly **0** of them. With no placed digit there is nothing to ban, because the rule forbids a repeat rather than restricting a cell in isolation.
+
+The ban only starts working once givens exist. We measured its first propagation pass on the six anti-king-minimal puzzles. Classic row, column, and box pruning removed 426.3 candidates from 729, or 58.5%. Adding the king rule removed 438.7, an extra 12.3 candidates. That is 1.69% of the original 729, or 4.07% of the 302.7 candidates still standing after classic pruning.
+
+The extra pruning touched 11.3 cells per board, about 1.09 candidates each. It produced a grand total of one new single across all six boards. So the honest description is: anti-king shaves candidates across a dozen cells, but it rarely gives you a placement on the first pass. It is a tiebreaker, not an opening move.
+
+That is not a criticism. A rule that removes a dozen candidates per pass compounds over a solve, and it is why the dug puzzles need fewer givens. It does mean you should not expect the board to collapse the moment you write your first digit.
+
+## What the Clue Saving Looks Like
+
+Both digs started from the same six solved grids. Each solution was generated with the king rule active and then verified against every row, column, box, and king adjacency. The classic dig removed a clue whenever the puzzle still had one classic solution. The anti-king dig used the same order but demanded one anti-king solution.
+
+| Board | Classic givens | Anti-king givens | Saved |
+|:---:|:---:|:---:|:---:|
+| 1 | 24 | 18 | 6 |
+| 2 | 23 | 19 | 4 |
+| 3 | 26 | 19 | 7 |
+| 4 | 24 | 21 | 3 |
+| 5 | 24 | 19 | 5 |
+| 6 | 23 | 19 | 4 |
+
+Classic digging bottomed out at 23 to 26 clues, mean 24.0. Anti-king digging stopped at 18 to 21, mean 19.17. The mean saving is 4.83 clues, roughly 20% of the classic total. Every board improved, but the effect ranged from 3 to 7 clues, which is a reminder that one test grid can mislead you in either direction.
+
+Now the comparison that surprised me. Our [anti-knight test](/guides/anti-knight-sudoku) found 448 directed knight adjacencies and saved 11 givens per puzzle. The king has 544 directed adjacencies and saves 4.8. More forbidden pairs produced less information, because 416 of the king's directed pairs were already classic peers. A knight's L-shaped jump lands outside the row, column, and usually the box, so a much larger share of its checks are new. Counting adjacency is not the same as counting useful adjacency, and anti-king is the cleanest example of that in this variant family.
+
+## The Center Is Not Special
+
+The obvious guess is that the middle of the board carries the most king bans and should therefore be where digging succeeds or fails. The counts do not support it.
+
+In the anti-king digs, cells of the central 3×3 were removed 43 times out of 54 attempts across six boards, 79.6%. The central 5×5 went 118 out of 150, 78.7%. The board as a whole went 371 out of 486, 76.3%. The center is slightly above average, not a separate regime. Under classic digging the same regions went 70.4%, 73.3%, and 70.4%, so the gap between center and board barely moves when the rule changes.
+
+We also split the anti-king removals by whether the cell had any genuinely new ban. Cells with at least one cross-box diagonal ban were removed 255 out of 336 times, 75.9%. Cells with no new ban were removed 116 out of 150 times, 77.3%. The unconstrained cells were, if anything, slightly easier to empty. Digging is driven by the whole uniqueness proof, not by local neighbour counts.
+
+Real talk: I built the first version of this harness expecting the center 3×3 to be the last region standing, the way it often is in killer and window puzzles. It came out almost identical to the rest of the board, and the reason is in the geometry table above. The new bans live on box borders, not in the middle of a box.
+
+## Solving Order That Matches the Geometry
+
+The rule rewards a narrower habit than most guides suggest.
+
+**Check cross-box diagonals first.** When a digit lands, look at the diagonal cells in the neighbouring boxes. Those are the only king checks that can remove a candidate not already killed by the row, column, or box. A 5 at row 3 column 3 forbids 5 at row 4 column 2 and row 4 column 4; both cross a box border. The same 5 against row 3 column 4 is already a row ban, and against row 4 column 3 it is already a column ban.
+
+**Do not waste time on corners.** A corner cell has three king-neighbours and all three are classic peers. There is no anti-king deduction available in a corner that ordinary sudoku does not already give you.
+
+**Treat the ban as a pair-breaker.** The first pass produced about one extra single per six boards in our sample. What it does well is kill one digit from a two- or three-candidate cell, which resolves naked pairs and triples indirectly. Run classic singles first, then apply the cross-box checks to whatever is left.
+
+**Expect the saving late, not early.** The empty board loses nothing, and the first pass after the givens removes only about 4% more than classic pruning. The advantage shows up in the middle of a solve, when a digit placement chain crosses several box borders at once. If the rule feels inert on move two, that is normal.
+
+If you want a variant where the added geometry does much more work, [jigsaw sudoku](/guides/jigsaw-sudoku) replaces the boxes entirely rather than layering a partly redundant rule on top of them. The contrast is worth feeling once: anti-king is a small, surgical addition, and jigsaw is a rebuild.
+
+## Try It
+
+Anti-king is easy to practise on a normal board because the only marks you need are the cross-box diagonals. Print a classic grid from the [sudoku maker](/maker), solve it with one extra habit: after every placement, check the four diagonal neighbours in the adjacent boxes and cross out that digit if it is still pencilled in. Count how often it actually removes something. On our numbers it should be roughly one candidate per touched cell, not the wholesale collapse the name implies.
+
+For a larger canvas, the [16×16 mega sudoku](/mega) board uses the same row, column, and box logic with sixteen digits, and the cross-box diagonal check scales with it. The [kids boards](/kids) are a good place to see the idea without a 20-peer background: on a 4×4, almost every king neighbour is already a row, column, or box peer, which makes the redundancy obvious.
+
+The full set of solving techniques behind these variants lives in the [sudoku logic guide](/guides/sudoku-logic), and the [anti-knight guide](/guides/anti-knight-sudoku) is the natural next read if you want to see what happens when the chess move stops overlapping the classic units. Start with the cross-box diagonals; that is where all 56 new bans are hiding.
