@@ -1,0 +1,81 @@
+---
+title: "Swordfish Sudoku: We Scanned 10,000 Puzzles and Found 55"
+description: "Swordfish sudoku appeared in 55 of 10,000 generated puzzles, about 3 in 500. Each pattern cut 3.1 candidates, and 36 boards also held a simpler X-Wing."
+date: "2026-11-21"
+tags: [swordfish, sudoku-techniques, advanced-sudoku]
+---
+
+A swordfish showed up in 55 of 10,000 generated puzzles — 0.55%, or roughly three boards in every 500. In 36 of those 55 the same stalled position also held an X-Wing, and the X-Wing was enough to move the solve forward. The three-row fish is real, but it is rarely the move you actually need.
+
+That gap between "the pattern exists" and "the pattern does work" is the useful part. Most swordfish tutorials show a clean diagram and imply the fish is the key to the board. Our scan says the opposite: when a swordfish is available, a simpler fish is often sitting next to it, and the solver should take the cheaper one first.
+
+## The Pattern Is Three Rows, Not Three Candidates
+
+A swordfish targets one digit. You pick three rows, and in each of those rows the digit has only two or three possible cells. If those candidate cells fall into exactly three columns across the three rows, the digit must occupy those three columns once each, all inside the three chosen rows. Every other cell in those three columns can drop the digit.
+
+The column version is the mirror image: three columns, each with two or three candidate cells, whose candidates fall into exactly three rows. Then you eliminate the digit from the rest of those rows.
+
+The common mistake is to look for three rows that each contain exactly three candidates. That is a stricter shape than the technique requires. In our 69 measured patterns, 39 were the pure 2-2-2 form, where every base row had exactly two candidate cells. The other 30 mixed two-candidate and three-candidate rows, and none were 3-3-3. If you require three candidates in every base row, you find none of the 69.
+
+A second check matters just as much. Each of the three cover columns should contain at least two of the three base rows. If a cover column has only one candidate inside the fish, the pattern is degenerate: you are probably looking at a hidden single or a smaller fish wearing a swordfish costume. Resolve that first. Our detector rejected those cases, which is why the 69 patterns are all non-degenerate.
+
+## What 10,000 Boards Actually Showed
+
+We generated 10,000 unique-solution 9×9 puzzles with our own engine, 2,500 at each clue target: 40, 34, 30 and 26 givens. Then we ran a fixed logical pipeline on every board.
+
+The pipeline applied naked singles, hidden singles, pointing pairs, box-line reduction, naked pairs and hidden pairs until nothing moved. At that stalled position it scanned for X-Wings and swordfish. A swordfish counted only if it eliminated at least one candidate. When both fish types were present, the solver applied the X-Wing first, because a two-row pattern is faster to verify.
+
+| Difficulty | Clues | Boards | With a swordfish | With an X-Wing |
+|:---|:---:|:---:|:---:|:---:|
+| Easy | 40 | 2,500 | 0 | 1 |
+| Medium | 34 | 2,500 | 3 | 7 |
+| Hard | 30 | 2,500 | 22 | 39 |
+| Evil | 26 | 2,500 | 30 | 74 |
+| Total | 32.5 avg | 10,000 | 55 | 121 |
+
+The difficulty gradient is steep. Easy boards produced no swordfish at all, and medium produced three. Hard and evil supplied 52 of the 55. Boards that reached a swordfish had a mean of 28.1 clues, against 32.5 for the full sample. Sparse boards give the pattern room to form, which matches what most players report: swordfish hunting starts to pay on the harder end of the shelf.
+
+These are engine-generated puzzles, not hand-made newspaper grids. A setter who deliberately builds around a swordfish will produce a much higher rate. The 0.55% measures how often the pattern emerges from clue-count-driven generation, not how often it appears in published puzzle collections.
+
+One limitation is worth stating plainly. Our pipeline stops at the first position where singles, intersections and pairs stall and no fish applies. Techniques beyond that, such as XY-Wings, coloring and chains, were not implemented. A fuller solver would reach different positions and could surface a different count. Treat 55 as a measured baseline, not a universal rate.
+
+## Row Fish and Column Fish Split Almost Evenly
+
+The 55 boards contained 69 swordfish patterns. Thirty-two were row-based and 37 were column-based. There is no meaningful bias toward one orientation in this sample; scanning only rows would have missed more than half the patterns.
+
+Twelve of the 55 boards held more than one swordfish pattern. That matters for the elimination count. A single pattern removed 3.12 candidates on average, with a median of 3 and a range from 1 to 8. The distribution was lumpy:
+
+| Candidates removed | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Patterns | 11 | 13 | 25 | 8 | 6 | 2 | 3 | 1 |
+
+When a board had only swordfish available, the solver could apply every live pattern at that position, and the combined cut averaged 5.45 candidates, median 5. So the honest answer to "how much does a swordfish remove?" depends on whether you count one pattern or one fish-only position. Per pattern: about three candidates. Per position where the fish is the only tool left: about five.
+
+The pure 2-2-2 shape removed 2.77 candidates on average. Patterns with at least one three-candidate base row removed 3.57. The fatter shape gives you more outside cells to attack, which is why it pays slightly better — and why it is also easier to overlook.
+
+A real example from the sample: a row-based swordfish on digit 4 used rows 3, 4 and 7, with candidate counts of 2, 3 and 2. Its cover columns were 1, 2 and 6, each containing at least two of the three base rows. It removed four candidates, and no X-Wing was available at that position.
+
+## The X-Wing Shadow
+
+The headline comparison is not swordfish versus nothing. It is swordfish versus X-Wing.
+
+X-Wings appeared on 121 of the 10,000 boards, about 1.2%, roughly six boards in every 500. That is 2.2 times the swordfish rate. The 162 X-Wing patterns removed 2.69 candidates on average, median 3, slightly less per pattern than the swordfish's 3.12.
+
+So the swordfish is rarer and marginally more productive per pattern. It is not a dramatically stronger technique. The bigger difference is timing: 36 of the 55 boards had at least one swordfish sharing a stalled position with an X-Wing. In those positions the X-Wing was applied first and usually dissolved the candidate set enough that the swordfish was no longer needed.
+
+This is the practical lesson. A swordfish you find is not automatically a swordfish you should use. Check the two-row fish first. If an X-Wing removes the same digit from the same region, the swordfish is redundant work. Only 20 boards in the sample had a swordfish with no X-Wing beside it, and those are the boards where the three-row scan earned its keep. One board produced both kinds of position, so the two groups overlap by a single case.
+
+## A Scan Order That Finds Them
+
+The scan is mechanical once you have candidates written in every cell. Pick one digit at a time, then list the rows where that digit has two or three open cells. Look for three rows whose column sets combine into exactly three columns. Verify that each cover column contains at least two of the rows. If it does, remove the digit from every other cell in those columns.
+
+Four habits cut the search time:
+
+- Start with digits that are close to placed. In our sample digit 5 led with 14 of 69 patterns, followed by 7 with 11 and 6 with 10. With 69 patterns that is a hint, not a rule, but crowded digits are cheaper to scan.
+- Accept mixed shapes. The pure 2-2-2 form was 57% of the measured patterns, and the rest had one or two three-candidate rows. No pattern was 3-3-3.
+- Check the cover columns before eliminating. A column with only one base-row candidate means the pattern is degenerate, and the real move is probably a hidden single.
+- Run the X-Wing check first. It is faster to verify and, in this sample, it was present in almost two-thirds of the boards where a swordfish existed.
+
+If you want a place to practise the scan, the [mega sudoku page](/mega) uses a 16×16 grid where the same three-unit logic applies with a larger digit range; the candidate sets are wider, so fish patterns form more often but take longer to read. For the surrounding technique ladder, see our [sudoku logic guide](/guides/sudoku-logic) and the [pattern overview](/guides/sudoku-patterns).
+
+The next time a hard board stalls, resist the urge to hunt for a swordfish immediately. Write candidates, exhaust singles and intersections, check for an X-Wing, and only then draw the three rows. On the evidence, the fish will be there about three times in 500 boards, and a simpler move will be waiting beside it more often than not.
